@@ -1,0 +1,748 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide elements until Alpine.js initializes (prevents flash of hidden UI) */
+[x-cloak] { display: none !important; }
+
+/* ================================================================ */
+/* MOBILE APP SHELL — REDESIGNED                                     */
+/* Dark-green theme matching the native app reference design.        */
+/* All rules are scoped to ≤639px so desktop is untouched.           */
+/* ================================================================ */
+
+/* --- Mobile-only / desktop-only visibility utilities --- */
+.mobile-app-bar { display: none; }
+.mobile-only { display: none; }
+.mobile-card-list { display: none; }
+.mobile-fab { display: none; }
+
+@media (max-width: 639px) {
+    /* Activate the mobile shell */
+    .mobile-app-bar { display: flex; }
+    .mobile-only { display: revert; }
+    .mobile-card-list { display: block; }
+    .mobile-fab { display: flex; }
+    /* When .mobile-only is combined with Tailwind grid/flex utilities, restore them */
+    .mobile-only.grid { display: grid; }
+    .mobile-only.flex { display: flex; }
+    .mobile-only.inline-flex { display: inline-flex; }
+    .mobile-only.contents { display: contents; }
+    .desktop-only-table { display: none !important; }
+    .desktop-header-row { display: none !important; }
+}
+
+/* --- Shared colour tokens (used by blade classes below) --- */
+:root {
+    --mg-green:   #1b3a2b;   /* primary dark green           */
+    --mg-green2:  #244736;   /* slightly lighter for cards   */
+    --mg-beige:   #f5f0e6;   /* content background           */
+    --mg-orange:  #f97316;   /* accent / action              */
+    --mg-orange-d:#ea580c;   /* darker orange (active)       */
+}
+
+/* ================================================================ */
+/*  GLOBAL MOBILE OVERRIDES                                          */
+/* ================================================================ */
+
+@media (max-width: 639px) {
+    html {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+        scroll-behavior: smooth;
+    }
+
+    body {
+        background: var(--mg-beige) !important;
+        /* Space for fixed bottom tab bar + safe area */
+        padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+        overscroll-behavior-y: none;
+    }
+
+    /* Push content below the sticky header so nothing slides under it on scroll */
+    .min-h-screen {
+        padding-top: 0;
+    }
+
+    /* Remove the large desktop header section on mobile */
+    .mobile-page-header {
+        display: none !important;
+    }
+
+    /* Reduce content padding on mobile */
+    .page-content {
+        padding-top: 0.75rem !important;
+        padding-bottom: 1rem !important;
+        background: var(--mg-beige);
+    }
+
+    .page-content-inner {
+        padding-left: 0.875rem !important;
+        padding-right: 0.875rem !important;
+    }
+
+    /* Cards use the new rounded style */
+    .card {
+        border-radius: 1rem !important;
+    }
+}
+
+/* ================================================================ */
+/*  MOBILE APP BAR  (dark-green header with branding)                */
+/* ================================================================ */
+
+@media (max-width: 639px) {
+    .mobile-app-bar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        background: var(--mg-green);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+        min-height: calc(3.75rem + env(safe-area-inset-top, 0px));
+    }
+
+    /* Left: logo + titles */
+    .mobile-app-bar .mg-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        min-width: 0;
+    }
+
+    .mobile-app-bar .mg-logo-circle {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .mobile-app-bar .mg-logo-circle svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: #fff;
+    }
+
+    .mobile-app-bar .mg-titles {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.15;
+        min-width: 0;
+    }
+
+    .mobile-app-bar .mg-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mobile-app-bar .mg-subtitle {
+        font-size: 0.625rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Right: notification bell + header action buttons */
+    .mobile-app-bar .mg-bar-right {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex-shrink: 0;
+    }
+
+    .mobile-app-bar .mg-bell {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .mobile-app-bar .mg-bell svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    /* Orange add button in header */
+    .mobile-app-bar .mg-add-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: var(--mg-orange);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .mobile-app-bar .mg-add-btn svg {
+        width: 0.875rem;
+        height: 0.875rem;
+    }
+}
+
+/* ================================================================ */
+/*  BOTTOM TAB BAR  (dark-green, 5 SVG tabs)                         */
+/* ================================================================ */
+
+.bottom-tab-bar {
+    display: none;
+}
+
+@media (max-width: 639px) {
+    .bottom-tab-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 50;
+        background: var(--mg-green);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .bottom-tab-bar a {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.125rem;
+        padding: 0.5rem 0.25rem 0.375rem;
+        min-height: 3.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.625rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .bottom-tab-bar a:active {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .bottom-tab-bar a.active {
+        color: var(--mg-orange);
+    }
+
+    .bottom-tab-bar a svg {
+        width: 1.375rem;
+        height: 1.375rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+    }
+
+    /* Tab-icon emoji fallback (legacy) */
+    .bottom-tab-bar a .tab-icon {
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+}
+
+/* ================================================================ */
+/*  MOBILE CARD LIST & ITEMS                                         */
+/* ================================================================ */
+
+.mobile-card-item {
+    background: #fff;
+    border-radius: 0.875rem;
+    padding: 0.875rem;
+    margin-bottom: 0.625rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    border: none;
+    transition: background 0.1s ease;
+}
+
+.mobile-card-item:active {
+    background: #f9f5ec;
+}
+
+.mobile-card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+/* ================================================================ */
+/*  STAT / METRIC CARD GRIDS                                         */
+/* ================================================================ */
+
+/* Dark-green summary card (used in headers & stat rows) */
+.mg-stat-card-dark {
+    background: var(--mg-green2);
+    border-radius: 0.875rem;
+    padding: 0.75rem;
+    color: #fff;
+}
+
+.mg-stat-card-dark .mg-stat-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.mg-stat-card-dark .mg-stat-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 0.125rem;
+}
+
+/* White summary card (light data cards in beige area) */
+.mg-stat-card-light {
+    background: #fff;
+    border-radius: 0.875rem;
+    padding: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.mg-stat-card-light .mg-stat-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.mg-stat-card-light .mg-stat-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-top: 0.125rem;
+}
+
+/* ================================================================ */
+/*  AVATAR CIRCLE (initials)                                         */
+/* ================================================================ */
+
+.mg-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: var(--mg-green2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* Smaller avatar variant (goat tags etc.) */
+.mg-avatar-sm {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--mg-green2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ================================================================ */
+/*  PROGRESS BAR                                                     */
+/* ================================================================ */
+
+.mg-progress {
+    width: 100%;
+    height: 0.375rem;
+    background: #f1f5f9;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.mg-progress-bar {
+    height: 100%;
+    border-radius: 9999px;
+    background: var(--mg-orange);
+    transition: width 0.3s ease;
+}
+
+/* ================================================================ */
+/*  SECTION HEADERS                                                  */
+/* ================================================================ */
+
+.mg-section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.625rem;
+    margin-top: 0.25rem;
+}
+
+.mg-section-title h3 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.mg-section-title a {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--mg-green);
+    text-decoration: none;
+}
+
+/* ================================================================ */
+/*  HERO CARD (total capital — dark green band)                      */
+/* ================================================================ */
+
+.mg-hero {
+    background: var(--mg-green);
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-bottom-left-radius: 1.25rem;
+    border-bottom-right-radius: 1.25rem;
+}
+
+.mg-hero .mg-hero-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.mg-hero .mg-hero-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+    margin-top: 0.125rem;
+}
+
+/* ================================================================ */
+/*  SEARCH BAR (mobile)                                              */
+/* ================================================================ */
+
+.mg-search {
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+.mg-search svg {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.mg-search input {
+    width: 100%;
+    background: #fff;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.625rem 0.75rem 0.625rem 2.25rem;
+    font-size: 0.8125rem;
+    color: #1f2937;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.mg-search input::placeholder {
+    color: #94a3b8;
+}
+
+/* ================================================================ */
+/*  SETTLE BUTTON                                                    */
+/* ================================================================ */
+
+.mg-settle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ================================================================ */
+/*  STATUS PILLS                                                     */
+/* ================================================================ */
+
+.mg-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+.mg-pill-green   { background: rgba(34, 197, 94, 0.12);  color: #16a34a; }
+.mg-pill-red     { background: rgba(239, 68, 68, 0.12);  color: #dc2626; }
+.mg-pill-blue    { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.mg-pill-gray    { background: rgba(100, 116, 139, 0.12);color: #64748b; }
+.mg-pill-amber   { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+
+/* ================================================================ */
+/*  "MORE" SLIDE-UP SHEET                                            */
+/* ================================================================ */
+
+@media (max-width: 639px) {
+    .mobile-more-sheet {
+        background: #fff;
+        border-top-left-radius: 1.25rem;
+        border-top-right-radius: 1.25rem;
+    }
+
+    .mobile-more-sheet .more-grid-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.75rem 0.5rem;
+        border-radius: 0.875rem;
+        background: var(--mg-beige);
+        color: #374151;
+        text-decoration: none;
+        transition: background 0.1s ease;
+    }
+
+    .mobile-more-sheet .more-grid-item:active {
+        background: #ede5d3;
+    }
+
+    .mobile-more-sheet .more-grid-item .more-icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.625rem;
+        background: var(--mg-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mobile-more-sheet .more-grid-item .more-icon svg {
+        width: 1.125rem;
+        height: 1.125rem;
+        color: #fff;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.8;
+    }
+
+    .mobile-more-sheet .more-grid-item .more-label {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: #374151;
+    }
+}
+
+/* ================================================================ */
+/*  FLOATING ACTION BUTTON (standalone)                              */
+/* ================================================================ */
+
+@media (max-width: 639px) {
+    .mobile-fab {
+        position: fixed;
+        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+        right: 1rem;
+        z-index: 45;
+    }
+
+    .mobile-fab a, .mobile-fab button {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 50%;
+        background: var(--mg-orange);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        box-shadow: 0 4px 16px rgba(249, 115, 22, 0.4);
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+
+    .mobile-fab a:active, .mobile-fab button:active {
+        transform: scale(0.92);
+    }
+
+    .mobile-fab svg {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
+/* ================================================================ */
+/*  COLLAPSIBLE FILTER (legacy compat — styled to match)             */
+/* ================================================================ */
+
+@media (max-width: 639px) {
+    .filter-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        background: #fff;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #475569;
+        cursor: pointer;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .filter-toggle:active {
+        background: #f9f5ec;
+    }
+
+    .filter-toggle .chevron {
+        transition: transform 0.2s ease;
+    }
+
+    .filter-toggle.open .chevron {
+        transform: rotate(180deg);
+    }
+
+    .filter-body {
+        display: none;
+    }
+
+    .filter-body.open {
+        display: block;
+        padding-top: 0.625rem;
+    }
+
+    .filter-body select,
+    .filter-body input {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        border-radius: 0.625rem !important;
+    }
+
+    .filter-body .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .filter-body .filter-actions button,
+    .filter-body .filter-actions a {
+        flex: 1;
+        text-align: center;
+        padding: 0.625rem;
+        border-radius: 0.625rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+}
+
+/* Desktop: show filters inline */
+@media (min-width: 640px) {
+    .filter-toggle { display: none !important; }
+    .filter-body { display: block !important; }
+}
+
+/* ================================================================ */
+/*  MOBILE BUDGET CARDS                                              */
+/* ================================================================ */
+
+@media (max-width: 639px) {
+    .budget-mobile-card {
+        background: #fff;
+        border-radius: 0.875rem;
+        padding: 0.875rem;
+        margin-bottom: 0.625rem;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .budget-month-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        margin-top: 0.625rem;
+    }
+
+    .budget-month-item {
+        background: var(--mg-beige);
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        text-align: center;
+    }
+
+    .budget-month-item .month-label {
+        font-size: 0.625rem;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .budget-month-item .month-value {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-top: 0.125rem;
+    }
+
+    .budget-month-item .month-value.zero {
+        color: #cbd5e1;
+    }
+}
+
+/* ================================================================ */
+/*  TOUCH TARGET OPTIMIZATION                                        */
+/* ================================================================ */
+
+@media (max-width: 639px) {
+    .btn-touch {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+    }
+
+    select, input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* ================================================================ */
+/*  SAFE AREA SUPPORT                                                */
+/* ================================================================ */
+
+@supports (padding: max(0px)) {
+    .safe-top {
+        padding-top: max(0.75rem, env(safe-area-inset-top));
+    }
+    .safe-bottom {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+}
