@@ -65,6 +65,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/breeding-records/{breeding_record}/kidding', [BreedingRecordController::class, 'storeKidding'])
         ->name('breeding-records.kidding.store');
 
+    // Quick-add investment (from investors list)
+    Route::post('/investments/quick-add', [InvestmentController::class, 'quickStore'])
+        ->name('investments.quick-add');
+
     // Investors (full resource)
     Route::resource('investors', InvestorController::class);
 

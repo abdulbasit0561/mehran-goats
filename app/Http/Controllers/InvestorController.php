@@ -25,7 +25,10 @@ class InvestorController extends Controller
         $totalCapital = (float) \DB::table('investments')->sum('amount');
         $totalExpenseSplit = (float) Investor::sum('expense_split_pct');
 
-        return view('investors.index', compact('investors', 'totalCapital', 'totalExpenseSplit'));
+        // All investors for the quick-add investment dropdown
+        $allInvestors = Investor::orderBy('name')->pluck('name', 'id');
+
+        return view('investors.index', compact('investors', 'totalCapital', 'totalExpenseSplit', 'allInvestors'));
     }
 
     public function create()
