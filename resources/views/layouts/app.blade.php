@@ -30,6 +30,7 @@
     </head>
     <body class="font-sans antialiased bg-gray-50">
         <x-pwa-install-banner />
+        <x-offline-status />
 
         @php
             // Determine page title + subtitle for the mobile app bar
@@ -177,6 +178,12 @@
             <a href="#" @click.prevent="$store.ui.openMore()" class="{{ request()->routeIs('transactions.*') || request()->routeIs('breeds.*') || request()->routeIs('caretakers.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('budget.*') || request()->routeIs('instructions') || request()->routeIs('profile.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 <span>More</span>
+                {{-- Offline pending count badge --}}
+                <template x-if="$store.offline && $store.offline.pendingCount > 0">
+                    <span class="offline-badge"
+                          x-text="$store.offline.pendingCount"
+                          @click.prevent="$store.offline.syncNow()"></span>
+                </template>
             </a>
         </nav>
 
@@ -219,6 +226,14 @@
                     </div>
 
                     <div class="grid grid-cols-3 gap-3">
+                        {{-- Offline Sync indicator + sync button --}}
+                        <a href="#" class="more-grid-item" @click.prevent="$store.offline && $store.offline.syncNow(); $store.ui.closeMore()" x-show="$store.offline && $store.offline.pendingCount > 0" style="display:none;">
+                            <span class="more-icon relative">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <span class="absolute -top-1 -right-1 bg-amber-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1" x-text="$store.offline && $store.offline.pendingCount"></span>
+                            </span>
+                            <span class="more-label">Sync Now</span>
+                        </a>
                         <a href="{{ route('caretakers.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
                             <span class="more-icon">
                                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>

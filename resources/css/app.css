@@ -746,3 +746,72 @@
         padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
     }
 }
+
+/* ================================================================ */
+/*  OFFLINE-FIRST STATUS BAR & BADGE                                  */
+/* ================================================================ */
+
+.offline-status-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    padding: 0.5rem 1rem;
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    background: #92400e;        /* amber-800 for pending */
+    color: #fff;
+    font-family: 'Figtree', sans-serif;
+    font-size: 0.8125rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: background 0.3s ease;
+}
+
+/* When truly offline, use a darker red-brown background */
+.offline-status-bar:has(svg + span:first-of-type) {
+    /* handled via Alpine template conditions */
+}
+
+/* Badge on the bottom tab bar "More" tab */
+.offline-badge {
+    position: absolute;
+    top: 0.125rem;
+    right: 50%;
+    transform: translateX(1.2rem);
+    background: #f59e0b;        /* amber-500 */
+    color: #fff;
+    font-size: 0.625rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    min-width: 1.125rem;
+    height: 1.125rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.25rem;
+    line-height: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    border: 1.5px solid #fff;
+}
+
+@media (min-width: 640px) {
+    /* On desktop, show the offline bar at the top of content instead of fixed overlay */
+    .offline-status-bar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+    }
+
+    .offline-badge {
+        display: none; /* badges are mobile-only; desktop users see the status bar */
+    }
+}
+
+/* Alpine x-cloak — hide elements until Alpine processes them */
+[x-cloak] {
+    display: none !important;
+}

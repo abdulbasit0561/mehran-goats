@@ -9,7 +9,7 @@
  *   - Non-GET (forms: POST/PUT/DELETE): never cached, pass through to network
  */
 
-const CACHE_VERSION = 'mehran-goats-v1';
+const CACHE_VERSION = 'mehran-goats-v2';
 const PRECACHE_URLS = [
     '/offline.html',
     '/manifest.json',

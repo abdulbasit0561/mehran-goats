@@ -14,6 +14,7 @@ use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\OwnershipUnitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -103,6 +104,10 @@ Route::middleware('auth')->group(function () {
 
     // Instructions
     Route::get('/instructions', [InstructionsController::class, 'index'])->name('instructions');
+
+    // Offline-First Sync (JSON API, session-based auth)
+    Route::get('/api/sync/pull', [SyncController::class, 'pull'])->name('sync.pull');
+    Route::post('/api/sync/push', [SyncController::class, 'push'])->name('sync.push');
 
     // Reports
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
