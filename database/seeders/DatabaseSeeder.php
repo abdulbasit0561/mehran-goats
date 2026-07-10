@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             BreedSeeder::class,
+            SuperAdminSeeder::class,
         ]);
 
         // Default admin / farmer account (only if it doesn't already exist)

@@ -2,6 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\Breed;
+use App\Models\BreedingRecord;
+use App\Models\BudgetEntry;
+use App\Models\Caretaker;
+use App\Models\Goat;
+use App\Models\HealthRecord;
+use App\Models\Investment;
+use App\Models\Investor;
+use App\Models\OwnershipUnit;
+use App\Models\ProfitDistribution;
+use App\Models\Transaction;
+use App\Observers\ActivityLogObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +31,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $trackableModels = [
+            Goat::class,
+            Breed::class,
+            Investor::class,
+            Transaction::class,
+            HealthRecord::class,
+            BreedingRecord::class,
+            Investment::class,
+            OwnershipUnit::class,
+            BudgetEntry::class,
+            Caretaker::class,
+            ProfitDistribution::class,
+        ];
+
+        foreach ($trackableModels as $model) {
+            $model::observe(ActivityLogObserver::class);
+        }
     }
 }

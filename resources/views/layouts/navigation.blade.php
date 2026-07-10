@@ -39,6 +39,11 @@
                     <x-nav-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.*')">
                         {{ __('Reports') }}
                     </x-nav-link>
+                    @if (Auth::user()?->isSuperAdmin())
+                        <x-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
+                            {{ __('Activity Logs') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -121,6 +126,11 @@
             <x-responsive-nav-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.*')">
                 {{ __('📈 Reports') }}
             </x-responsive-nav-link>
+            @if (Auth::user()?->isSuperAdmin())
+                <x-responsive-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
+                    {{ __('📋 Activity Logs') }}
+                </x-responsive-nav-link>
+            @endif
             <x-responsive-nav-link :href="route('instructions')" :active="request()->routeIs('instructions')">
                 {{ __('ℹ️ Instructions') }}
             </x-responsive-nav-link>

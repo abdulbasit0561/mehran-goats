@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BreedController;
 use App\Http\Controllers\BreedingController;
 use App\Http\Controllers\BreedingRecordController;
@@ -116,6 +117,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/investors', [ReportController::class, 'investorIndex'])->name('reports.investors');
     Route::get('/reports/investor/{investor}', [ReportController::class, 'investorStatement'])->name('reports.investor');
     Route::get('/reports/investor/{investor}/csv', [ReportController::class, 'investorCsv'])->name('reports.investor.csv');
+
+    // Activity Logs (super admin only)
+    Route::middleware('super_admin')->group(function () {
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/activity-logs/{activity_log}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
+    });
 });
 
 require __DIR__.'/auth.php';

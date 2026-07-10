@@ -68,6 +68,8 @@
                     'reports.profit-loss' => 'Reports',
                     'instructions' => 'Instructions',
                     'profile.edit' => 'Profile',
+                    'activity-logs.index' => 'Activity Logs',
+                    'activity-logs.show' => 'Activity Detail',
                 ];
                 foreach ($titles as $pattern => $label) {
                     if (str_starts_with($routeName, explode('.', $pattern)[0])) {
@@ -175,7 +177,7 @@
             </a>
 
             {{-- More (opens slide-up sheet via Alpine store) --}}
-            <a href="#" @click.prevent="$store.ui.openMore()" class="{{ request()->routeIs('transactions.*') || request()->routeIs('breeds.*') || request()->routeIs('caretakers.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('budget.*') || request()->routeIs('instructions') || request()->routeIs('profile.*') ? 'active' : '' }}">
+            <a href="#" @click.prevent="$store.ui.openMore()" class="{{ request()->routeIs('transactions.*') || request()->routeIs('breeds.*') || request()->routeIs('caretakers.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('budget.*') || request()->routeIs('instructions') || request()->routeIs('profile.*') || request()->routeIs('activity-logs.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 <span>More</span>
                 {{-- Offline pending count badge --}}
@@ -270,6 +272,14 @@
                             </span>
                             <span class="more-label">Guide</span>
                         </a>
+                        @if (Auth::user()?->isSuperAdmin())
+                            <a href="{{ route('activity-logs.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
+                                <span class="more-icon">
+                                    <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                </span>
+                                <span class="more-label">Logs</span>
+                            </a>
+                        @endif
                         <a href="{{ route('profile.edit') }}" class="more-grid-item" @click="$store.ui.closeMore()">
                             <span class="more-icon">
                                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
