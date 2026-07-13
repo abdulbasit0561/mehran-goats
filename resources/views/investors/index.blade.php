@@ -122,31 +122,6 @@
                     </div>
                 @endif
 
-                {{-- Filters --}}
-                <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4 mb-4 sm:mb-6" x-data="{ open: false }">
-                    <button class="filter-toggle" @click="open = !open" :class="{ 'open': open }">
-                        <span class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            Search Investors
-                        </span>
-                        <svg class="chevron w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="filter-body" :class="{ 'open': open }">
-                        <form method="GET" action="{{ route('investors.index') }}" class="space-y-0">
-                            <input type="text" name="q" value="{{ request('q') }}" placeholder="Search name/email/phone…" class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm" />
-                            <div class="filter-actions">
-                                <button type="submit" class="bg-indigo-600 text-white">Search</button>
-                                <a href="{{ route('investors.index') }}" class="bg-gray-100 text-gray-600">Reset</a>
-                            </div>
-                        </form>
-                    </div>
-                    {{-- Desktop version --}}
-                <div class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
-                    <input type="text" id="filter-q" placeholder="Search name/email/phone…" class="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 min-w-0 sm:max-w-xs" />
-                    <button type="button" id="filter-reset" class="text-sm text-gray-500 hover:underline">Reset</button>
-                </div>
-                </div>
-
                 {{-- Settlement explanation (desktop only) --}}
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 hidden sm:block">
                     <p class="text-sm text-blue-800">
@@ -279,7 +254,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof window.initServerDataTable === 'undefined') return;
 
-            var tbl = window.initServerDataTable('#investors-table', '{{ route('investors.data') }}', {
+            window.initServerDataTable('#investors-table', '{{ route('investors.data') }}', {
                 order: [[0, 'asc']],
                 columns: [
                     { data: 'name', name: 'name' },
@@ -294,22 +269,6 @@
                     { data: 'settlement_balance', name: 'settlement_balance', className: 'text-right' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false },
                 ],
-            });
-
-            // Search input integration
-            var searchInput = document.getElementById('filter-q');
-            if (searchInput) {
-                var debounceTimer;
-                searchInput.addEventListener('input', function () {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(function () {
-                        tbl.search(searchInput.value).draw();
-                    }, 300);
-                });
-            }
-            document.getElementById('filter-reset')?.addEventListener('click', function () {
-                if (searchInput) searchInput.value = '';
-                tbl.search('').draw();
             });
         });
     </script>

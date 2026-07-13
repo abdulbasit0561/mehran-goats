@@ -169,30 +169,6 @@
                 </div>
             </div>
 
-            {{-- FILTERS (desktop) --}}
-            <div class="desktop-only-table bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-                <div class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
-                    <select id="filter-status" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">All Statuses</option>
-                        @foreach (['kid','grower','breeder','sold','deceased'] as $s)
-                            <option value="{{ $s }}">{{ ucfirst($s) }}</option>
-                        @endforeach
-                    </select>
-                    <select id="filter-breed" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">All Breeds</option>
-                        @foreach ($breeds as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                    <select id="filter-pregnant" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="">All Breeding</option>
-                        <option value="yes">🤰 Pregnant/Bred</option>
-                        <option value="open">Not Pregnant</option>
-                    </select>
-                    <button type="button" id="filter-reset" class="text-sm text-gray-500 hover:underline">Reset</button>
-                </div>
-            </div>
-
             {{-- DESKTOP TABLE --}}
             <div class="desktop-only-table">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
@@ -224,7 +200,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof window.initServerDataTable === 'undefined') return;
 
-            var tbl = window.initServerDataTable('#goats-table', '{{ route('goats.data') }}', {
+            window.initServerDataTable('#goats-table', '{{ route('goats.data') }}', {
                 order: [[0, 'asc']],
                 columns: [
                     { data: 'tag_id', name: 'tag_id' },
@@ -240,23 +216,34 @@
                     { data: 'days_held', name: 'days_held', className: 'text-center' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false },
                 ],
-                extraData: function () {
-                    return {
-                        status: document.getElementById('filter-status')?.value || '',
-                        breed: document.getElementById('filter-breed')?.value || '',
-                        pregnant: document.getElementById('filter-pregnant')?.value || '',
-                    };
-                }
-            });
-
-            ['filter-status', 'filter-breed', 'filter-pregnant'].forEach(function (id) {
-                document.getElementById(id)?.addEventListener('change', function () { tbl.ajax.reload(); });
-            });
-            document.getElementById('filter-reset')?.addEventListener('click', function () {
-                document.getElementById('filter-status').value = '';
-                document.getElementById('filter-breed').value = '';
-                document.getElementById('filter-pregnant').value = '';
-                tbl.ajax.reload();
+                filters: [
+                    {
+                        key: 'status',
+                        label: 'All Statuses',
+                        options: [
+                            @foreach (['kid','grower','breeder','sold','deceased'] as $s)
+                            { value: '{{ $s }}', text: '{{ ucfirst($s) }}' },
+                            @endforeach
+                        ],
+                    },
+                    {
+                        key: 'breed',
+                        label: 'All Breeds',
+                        options: [
+                            @foreach ($breeds as $id => $name)
+                            { value: '{{ $id }}', text: '{{ $name }}' },
+                            @endforeach
+                        ],
+                    },
+                    {
+                        key: 'pregnant',
+                        label: 'All Breeding',
+                        options: [
+                            { value: 'yes', text: '🤰 Pregnant/Bred' },
+                            { value: 'open', text: 'Not Pregnant' },
+                        ],
+                    },
+                ],
             });
         });
     </script>

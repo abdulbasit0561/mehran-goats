@@ -36,72 +36,6 @@
             </div>
 
             {{-- ============================================================= --}}
-            {{-- FILTERS (collapsible on mobile, inline on desktop)            --}}
-            {{-- ============================================================= --}}
-            <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4 mb-4 sm:mb-6" x-data="{ open: false }">
-                <button class="filter-toggle" @click="open = !open" :class="{ 'open': open }">
-                    <span class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                        Filter Transactions
-                        @if (request('type') || request('category') || request('paid_by') || request('from') || request('to'))
-                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px]">•</span>
-                        @endif
-                    </span>
-                    <svg class="chevron w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <div class="filter-body" :class="{ 'open': open }">
-                    <form method="GET" action="{{ route('transactions.index') }}" class="space-y-0">
-                        <select name="type" class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
-                            <option value="">All Types</option>
-                            <option value="income" {{ request('type') === 'income' ? 'selected' : '' }}>Income</option>
-                            <option value="expense" {{ request('type') === 'expense' ? 'selected' : '' }}>Expense</option>
-                        </select>
-                        <select name="category" class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
-                            <option value="">All Categories</option>
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat }}" {{ request('category') === $cat ? 'selected' : '' }}>{{ $cat }}</option>
-                            @endforeach
-                        </select>
-                        <select name="paid_by" class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm">
-                            <option value="">All Payers</option>
-                            @foreach ($investors as $inv)
-                                <option value="{{ $inv->id }}" {{ (string) request('paid_by') === (string) $inv->id ? 'selected' : '' }}>{{ $inv->name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="date" name="from" value="{{ request('from') }}" class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm" placeholder="From" />
-                        <input type="date" name="to" value="{{ request('to') }}" class="border border-gray-300 rounded-lg px-3 py-2.5 text-sm" placeholder="To" />
-                        <div class="filter-actions">
-                            <button type="submit" class="bg-indigo-600 text-white">Apply</button>
-                            <a href="{{ route('transactions.index') }}" class="bg-gray-100 text-gray-600">Reset</a>
-                        </div>
-                    </form>
-                </div>
-                {{-- Desktop version --}}
-                <div class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
-                    <select id="filter-type" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                        <option value="">All Types</option>
-                        <option value="income">Income</option>
-                        <option value="expense">Expense</option>
-                    </select>
-                    <select id="filter-category" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                        <option value="">All Categories</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
-                    </select>
-                    <select id="filter-paid-by" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
-                        <option value="">All Payers</option>
-                        @foreach ($investors as $inv)
-                            <option value="{{ $inv->id }}">{{ $inv->name }}</option>
-                        @endforeach
-                    </select>
-                    <input type="date" id="filter-from" class="border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="From" />
-                    <input type="date" id="filter-to" class="border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="To" />
-                    <button type="button" id="filter-reset" class="text-sm text-gray-500 hover:underline">Reset</button>
-                </div>
-            </div>
-
-            {{-- ============================================================= --}}
             {{-- DESKTOP TABLE (hidden on mobile)                              --}}
             {{-- ============================================================= --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 desktop-only-table">
@@ -182,7 +116,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof window.initServerDataTable === 'undefined') return;
 
-            var tbl = window.initServerDataTable('#transactions-table', '{{ route('transactions.data') }}', {
+            window.initServerDataTable('#transactions-table', '{{ route('transactions.data') }}', {
                 order: [[0, 'desc']],
                 columns: [
                     { data: 'date', name: 'date' },
@@ -197,26 +131,34 @@
                     { data: 'variance', name: 'variance', className: 'text-right' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false },
                 ],
-                extraData: function () {
-                    return {
-                        type: document.getElementById('filter-type')?.value || '',
-                        category: document.getElementById('filter-category')?.value || '',
-                        paid_by: document.getElementById('filter-paid-by')?.value || '',
-                        from: document.getElementById('filter-from')?.value || '',
-                        to: document.getElementById('filter-to')?.value || '',
-                    };
-                }
-            });
-
-            ['filter-type', 'filter-category', 'filter-paid-by', 'filter-from', 'filter-to'].forEach(function (id) {
-                document.getElementById(id)?.addEventListener('change', function () { tbl.ajax.reload(); });
-            });
-            document.getElementById('filter-reset')?.addEventListener('click', function () {
-                ['filter-type', 'filter-category', 'filter-paid-by', 'filter-from', 'filter-to'].forEach(function (id) {
-                    var el = document.getElementById(id);
-                    if (el) el.value = '';
-                });
-                tbl.ajax.reload();
+                filters: [
+                    {
+                        key: 'type',
+                        label: 'All Types',
+                        options: [
+                            { value: 'income', text: 'Income' },
+                            { value: 'expense', text: 'Expense' },
+                        ],
+                    },
+                    {
+                        key: 'category',
+                        label: 'All Categories',
+                        options: [
+                            @foreach ($categories as $cat)
+                            { value: '{{ $cat }}', text: '{{ $cat }}' },
+                            @endforeach
+                        ],
+                    },
+                    {
+                        key: 'paid_by',
+                        label: 'All Payers',
+                        options: [
+                            @foreach ($investors as $inv)
+                            { value: '{{ $inv->id }}', text: '{{ $inv->name }}' },
+                            @endforeach
+                        ],
+                    },
+                ],
             });
         });
     </script>

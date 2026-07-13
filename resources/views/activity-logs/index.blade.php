@@ -8,33 +8,6 @@
     <div class="py-6 sm:py-12 page-content">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
 
-            {{-- Filters --}}
-            <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-                <div class="flex flex-wrap gap-2 sm:gap-3 sm:items-center">
-                    <select id="filter-action" class="border border-gray-300 rounded-lg sm:rounded-md px-3 py-2 text-sm">
-                        <option value="">All Actions</option>
-                        @foreach ($actions as $value => $label)
-                            <option value="{{ $value }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <select id="filter-entity" class="border border-gray-300 rounded-lg sm:rounded-md px-3 py-2 text-sm">
-                        <option value="">All Entities</option>
-                        @foreach ($entities as $label => $value)
-                            <option value="{{ $value }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <select id="filter-user" class="border border-gray-300 rounded-lg sm:rounded-md px-3 py-2 text-sm">
-                        <option value="">All Users</option>
-                        @foreach ($users as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                    <input type="date" id="filter-from" class="border border-gray-300 rounded-lg sm:rounded-md px-3 py-2 text-sm" />
-                    <input type="date" id="filter-to" class="border border-gray-300 rounded-lg sm:rounded-md px-3 py-2 text-sm" />
-                    <button type="button" id="filter-reset" class="text-sm text-gray-500 hover:underline">Reset</button>
-                </div>
-            </div>
-
             {{-- Desktop Table --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 desktop-only-table">
                 <table id="activity-logs-table" class="w-full text-sm display">
@@ -92,7 +65,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof window.initServerDataTable === 'undefined') return;
 
-            var tbl = window.initServerDataTable('#activity-logs-table', '{{ route('activity-logs.data') }}', {
+            window.initServerDataTable('#activity-logs-table', '{{ route('activity-logs.data') }}', {
                 order: [[0, 'desc']],
                 columns: [
                     { data: 'created_at', name: 'created_at' },
@@ -103,26 +76,35 @@
                     { data: 'ip_address', name: 'ip_address' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false },
                 ],
-                extraData: function () {
-                    return {
-                        entity_type: document.getElementById('filter-entity')?.value || '',
-                        action: document.getElementById('filter-action')?.value || '',
-                        user_id: document.getElementById('filter-user')?.value || '',
-                        from: document.getElementById('filter-from')?.value || '',
-                        to: document.getElementById('filter-to')?.value || '',
-                    };
-                }
-            });
-
-            ['filter-action', 'filter-entity', 'filter-user', 'filter-from', 'filter-to'].forEach(function (id) {
-                document.getElementById(id)?.addEventListener('change', function () { tbl.ajax.reload(); });
-            });
-            document.getElementById('filter-reset')?.addEventListener('click', function () {
-                ['filter-action', 'filter-entity', 'filter-user', 'filter-from', 'filter-to'].forEach(function (id) {
-                    var el = document.getElementById(id);
-                    if (el) el.value = '';
-                });
-                tbl.ajax.reload();
+                filters: [
+                    {
+                        key: 'action',
+                        label: 'All Actions',
+                        options: [
+                            @foreach ($actions as $value => $label)
+                            { value: '{{ $value }}', text: '{{ $label }}' },
+                            @endforeach
+                        ],
+                    },
+                    {
+                        key: 'entity_type',
+                        label: 'All Entities',
+                        options: [
+                            @foreach ($entities as $label => $value)
+                            { value: '{{ $value }}', text: '{{ $label }}' },
+                            @endforeach
+                        ],
+                    },
+                    {
+                        key: 'user_id',
+                        label: 'All Users',
+                        options: [
+                            @foreach ($users as $id => $name)
+                            { value: '{{ $id }}', text: '{{ $name }}' },
+                            @endforeach
+                        ],
+                    },
+                ],
             });
         });
     </script>
