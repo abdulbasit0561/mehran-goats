@@ -19,7 +19,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($investors as $investor)
+                        @foreach ($investors as $investor)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-3 font-medium">{{ $investor->name }}</td>
                                 <td class="px-6 py-3 text-right">{{ number_format((float) $investor->total_capital, 2) }}</td>
@@ -29,9 +29,7 @@
                                     <a href="{{ route('reports.investor.csv', $investor) }}" class="text-green-600 hover:underline text-xs">CSV</a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">No investors yet.</td></tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>

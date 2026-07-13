@@ -75,7 +75,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($distributions as $dist)
+                        @foreach ($distributions as $dist)
                             <tr>
                                 <td class="px-6 py-3 font-medium">{{ $dist->investor->name }}</td>
                                 <td class="px-6 py-3 text-gray-600">{{ $dist->period_start->format('M d') }} – {{ $dist->period_end->format('M d, Y') }}</td>
@@ -97,9 +97,7 @@
                                     @endif
                                 </td>
                             </tr>
-                        @empty
-                            <tr><td colspan="7" class="px-6 py-6 text-center text-gray-400">No distributions yet.</td></tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -113,15 +111,13 @@
                             <tr><th>Date</th><th>Category</th><th class="text-right!">Amount</th></tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @forelse ($income as $t)
+                            @foreach ($income as $t)
                                 <tr>
                                     <td class="px-6 py-2 text-gray-600">{{ $t->date->format('M d') }}</td>
                                     <td class="px-6 py-2">{{ $t->category }}</td>
                                     <td class="px-6 py-2 text-right font-medium text-green-600">{{ number_format($t->amount, 2) }}</td>
                                 </tr>
-                            @empty
-                                <tr><td colspan="3" class="px-6 py-4 text-center text-gray-400">No income in this period.</td></tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>
@@ -133,15 +129,13 @@
                             <tr><th>Date</th><th>Category</th><th class="text-right!">Amount</th></tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @forelse ($expense as $t)
+                            @foreach ($expense as $t)
                                 <tr>
                                     <td class="px-6 py-2 text-gray-600">{{ $t->date->format('M d') }}</td>
                                     <td class="px-6 py-2">{{ $t->category }}</td>
                                     <td class="px-6 py-2 text-right font-medium text-red-600">{{ number_format($t->amount, 2) }}</td>
                                 </tr>
-                            @empty
-                                <tr><td colspan="3" class="px-6 py-4 text-center text-gray-400">No expenses in this period.</td></tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

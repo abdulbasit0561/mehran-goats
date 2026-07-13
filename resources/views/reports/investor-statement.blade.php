@@ -44,7 +44,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($investor->profitDistributions as $dist)
+                        @foreach ($investor->profitDistributions as $dist)
                             <tr>
                                 <td class="px-6 py-3 text-gray-600">{{ $dist->period_start->format('M d') }} – {{ $dist->period_end->format('M d, Y') }}</td>
                                 <td class="px-6 py-3 text-right">{{ number_format($dist->share_pct, 2) }}%</td>
@@ -57,9 +57,7 @@
                                     </span>
                                 </td>
                             </tr>
-                        @empty
-                            <tr><td colspan="5" class="px-6 py-6 text-center text-gray-400">No distributions yet.</td></tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -78,15 +76,13 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($investor->investments as $inv)
+                        @foreach ($investor->investments as $inv)
                             <tr>
                                 <td class="px-6 py-3">{{ $inv->date->format('M d, Y') }}</td>
                                 <td class="px-6 py-3 text-right font-medium">{{ number_format($inv->amount, 2) }}</td>
                                 <td class="px-6 py-3 text-gray-500">{{ $inv->notes ?? '—' }}</td>
                             </tr>
-                        @empty
-                            <tr><td colspan="3" class="px-6 py-6 text-center text-gray-400">No investments.</td></tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -106,16 +102,14 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($transactions as $t)
+                        @foreach ($transactions as $t)
                             <tr>
                                 <td class="px-6 py-3">{{ $t->date->format('M d, Y') }}</td>
                                 <td class="px-6 py-3">{{ ucfirst($t->type) }}</td>
                                 <td class="px-6 py-3">{{ $t->category }}</td>
                                 <td class="px-6 py-3 text-right font-medium {{ $t->type === 'income' ? 'text-green-600' : 'text-red-600' }}">{{ number_format($t->amount, 2) }}</td>
                             </tr>
-                        @empty
-                            <tr><td colspan="4" class="px-6 py-6 text-center text-gray-400">No linked transactions.</td></tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
