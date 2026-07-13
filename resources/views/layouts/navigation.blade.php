@@ -11,15 +11,15 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-4 sm:-my-px sm:ms-6 sm:flex items-center">
+                <div class="hidden space-x-2 sm:-my-px sm:ms-6 sm:flex items-center">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
                     {{-- Livestock dropdown --}}
-                    <x-dropdown align="left" width="56">
+                    <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
-                            <button class="inline-flex items-center px-1 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
+                            <button class="inline-flex items-center px-3 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
                                 {{ request()->routeIs('goats.*') || request()->routeIs('breeds.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') ? 'text-indigo-600 border-indigo-400' : 'text-gray-500 hover:text-gray-700 border-transparent' }} border-b-2">
                                 {{ __('Livestock') }}
                                 <svg class="fill-current h-3 w-3 ms-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
@@ -27,21 +27,21 @@
                         </x-slot>
                         <x-slot name="content">
                             <x-dropdown-link :href="route('goats.index')" :active="request()->routeIs('goats.*')">
-                                {{ __('🐐 Livestock') }}
+                                {{ __('Livestock') }}
                             </x-dropdown-link>
                             <x-dropdown-link :href="route('breeds.index')" :active="request()->routeIs('breeds.*')">
-                                {{ __('🏷️ Breeds') }}
+                                {{ __('Breeds') }}
                             </x-dropdown-link>
                             <x-dropdown-link :href="route('breeding.index')" :active="request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*')">
-                                {{ __('🤰 Breeding') }}
+                                {{ __('Breeding') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
 
-                    {{-- Investors dropdown --}}
-                    <x-dropdown align="left" width="56">
+                    {{-- People dropdown --}}
+                    <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
-                            <button class="inline-flex items-center px-1 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
+                            <button class="inline-flex items-center px-3 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
                                 {{ request()->routeIs('investors.*') || request()->routeIs('caretakers.*') ? 'text-indigo-600 border-indigo-400' : 'text-gray-500 hover:text-gray-700 border-transparent' }} border-b-2">
                                 {{ __('People') }}
                                 <svg class="fill-current h-3 w-3 ms-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
@@ -49,18 +49,18 @@
                         </x-slot>
                         <x-slot name="content">
                             <x-dropdown-link :href="route('investors.index')" :active="request()->routeIs('investors.*')">
-                                {{ __('👥 Investors') }}
+                                {{ __('Investors') }}
                             </x-dropdown-link>
                             <x-dropdown-link :href="route('caretakers.index')" :active="request()->routeIs('caretakers.*')">
-                                {{ __('🤝 Caretakers') }}
+                                {{ __('Caretakers') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
 
                     {{-- Financials dropdown --}}
-                    <x-dropdown align="left" width="56">
+                    <x-dropdown align="left" width="48">
                         <x-slot name="trigger">
-                            <button class="inline-flex items-center px-1 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
+                            <button class="inline-flex items-center px-3 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
                                 {{ request()->routeIs('transactions.*') || request()->routeIs('budget.*') || request()->routeIs('reports.*') ? 'text-indigo-600 border-indigo-400' : 'text-gray-500 hover:text-gray-700 border-transparent' }} border-b-2">
                                 {{ __('Financials') }}
                                 <svg class="fill-current h-3 w-3 ms-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
@@ -68,13 +68,13 @@
                         </x-slot>
                         <x-slot name="content">
                             <x-dropdown-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
-                                {{ __('💸 Expenses') }}
+                                {{ __('Expenses') }}
                             </x-dropdown-link>
                             <x-dropdown-link :href="route('budget.index')" :active="request()->routeIs('budget.*')">
-                                {{ __('📋 Budget') }}
+                                {{ __('Budget') }}
                             </x-dropdown-link>
                             <x-dropdown-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.*')">
-                                {{ __('📈 Reports') }}
+                                {{ __('Reports') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
@@ -98,14 +98,14 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('instructions')">
-                            {{ __('ℹ️ Instructions') }}
+                            {{ __('Instructions') }}
                         </x-dropdown-link>
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>
                         @if (Auth::user()?->isSuperAdmin())
                             <x-dropdown-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
-                                {{ __('📋 Activity Logs') }}
+                                {{ __('Activity Logs') }}
                             </x-dropdown-link>
                         @endif
 
@@ -140,50 +140,50 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('📊 Dashboard') }}
+                {{ __('Dashboard') }}
             </x-responsive-nav-link>
 
             {{-- Livestock group --}}
             <div class="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">Livestock</div>
             <x-responsive-nav-link :href="route('goats.index')" :active="request()->routeIs('goats.*')">
-                {{ __('🐐 Livestock') }}
+                {{ __('Livestock') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('breeds.index')" :active="request()->routeIs('breeds.*')">
-                {{ __('🏷️ Breeds') }}
+                {{ __('Breeds') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('breeding.index')" :active="request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*')">
-                {{ __('🤰 Breeding') }}
+                {{ __('Breeding') }}
             </x-responsive-nav-link>
 
             {{-- People group --}}
             <div class="px-4 py-1 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">People</div>
             <x-responsive-nav-link :href="route('investors.index')" :active="request()->routeIs('investors.*')">
-                {{ __('👥 Investors') }}
+                {{ __('Investors') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('caretakers.index')" :active="request()->routeIs('caretakers.*')">
-                {{ __('🤝 Caretakers') }}
+                {{ __('Caretakers') }}
             </x-responsive-nav-link>
 
             {{-- Financials group --}}
             <div class="px-4 py-1 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Financials</div>
             <x-responsive-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
-                {{ __('💸 Expenses') }}
+                {{ __('Expenses') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('budget.index')" :active="request()->routeIs('budget.*')">
-                {{ __('📋 Budget') }}
+                {{ __('Budget') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.*')">
-                {{ __('📈 Reports') }}
+                {{ __('Reports') }}
             </x-responsive-nav-link>
 
             <div class="border-t border-gray-200 my-2"></div>
 
             <x-responsive-nav-link :href="route('instructions')" :active="request()->routeIs('instructions')">
-                {{ __('ℹ️ Instructions') }}
+                {{ __('Instructions') }}
             </x-responsive-nav-link>
             @if (Auth::user()?->isSuperAdmin())
                 <x-responsive-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
-                    {{ __('📋 Activity Logs') }}
+                    {{ __('Activity Logs') }}
                 </x-responsive-nav-link>
             @endif
         </div>
