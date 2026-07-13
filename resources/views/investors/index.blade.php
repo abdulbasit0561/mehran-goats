@@ -141,11 +141,10 @@
                         </form>
                     </div>
                     {{-- Desktop version --}}
-                    <form method="GET" action="{{ route('investors.index') }}" class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Search name/email/phone…" class="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 min-w-0 sm:max-w-xs" />
-                        <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md text-sm font-medium">Filter</button>
-                        <a href="{{ route('investors.index') }}" class="text-sm text-gray-500 hover:underline">Reset</a>
-                    </form>
+                <div class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
+                    <input type="text" id="filter-q" placeholder="Search name/email/phone…" class="border border-gray-300 rounded-md px-3 py-2 text-sm flex-1 min-w-0 sm:max-w-xs" />
+                    <button type="button" id="filter-reset" class="text-sm text-gray-500 hover:underline">Reset</button>
+                </div>
                 </div>
 
                 {{-- Settlement explanation (desktop only) --}}
@@ -158,78 +157,25 @@
                 </div>
 
                 {{-- Desktop table --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm whitespace-nowrap">
-                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
-                                <tr>
-                                    <th class="px-4 py-3 text-left">Investor</th>
-                                    <th class="px-4 py-3 text-left">Role</th>
-                                    <th class="px-4 py-3 text-right">Capital</th>
-                                    <th class="px-4 py-3 text-right">Own %</th>
-                                    <th class="px-4 py-3 text-right">Herd Share</th>
-                                    <th class="px-4 py-3 text-right">Profit Share</th>
-                                    <th class="px-4 py-3 text-right">Split %</th>
-                                    <th class="px-4 py-3 text-right">Exp Owed</th>
-                                    <th class="px-4 py-3 text-right">Exp Paid</th>
-                                    <th class="px-4 py-3 text-right">Settlement</th>
-                                    <th class="px-4 py-3 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @forelse ($investors as $investor)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-4 py-3 font-medium">
-                                            <a href="{{ route('investors.show', $investor) }}" class="text-indigo-600 hover:underline">{{ $investor->name }}</a>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            @if ($investor->isManager())
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">Manager</span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Investor</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-3 text-right font-medium">{{ number_format($investor->total_capital, 0) }}</td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($investor->share_pct, 1) }}%</td>
-                                        <td class="px-4 py-3 text-right text-gray-600">{{ number_format($investor->herd_share, 0) }}</td>
-                                        <td class="px-4 py-3 text-right text-gray-600">{{ number_format($investor->profit_share, 0) }}</td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($investor->expense_split_pct, 1) }}%</td>
-                                        <td class="px-4 py-3 text-right text-gray-600">{{ number_format($investor->expense_owed, 0) }}</td>
-                                        <td class="px-4 py-3 text-right text-gray-600">{{ number_format($investor->expense_paid, 0) }}</td>
-                                        <td class="px-4 py-3 text-right font-semibold {{ $investor->settlement_balance >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ $investor->settlement_balance >= 0 ? '+' : '' }}{{ number_format($investor->settlement_balance, 0) }}
-                                        </td>
-                                        <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
-                                            <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-investment-modal', { detail: { investorId: {{ $investor->id }} } }))" class="text-emerald-600 hover:underline text-xs">Investment</button>
-                                            <a href="{{ route('investors.edit', $investor) }}" class="text-indigo-600 hover:underline text-xs">Edit</a>
-                                            <form method="POST" action="{{ route('investors.destroy', $investor) }}" class="inline" onsubmit="return confirm('Delete this investor?')">
-                                                @csrf @method('DELETE')
-                                                <button class="text-red-600 hover:underline text-xs">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="11" class="px-4 py-8 text-center text-gray-400">No investors yet. <a href="{{ route('investors.create') }}" class="text-indigo-600 hover:underline">Add one</a></td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                            @if (count($investors) > 0)
-                                <tfoot>
-                                    <tr class="bg-gray-50 font-semibold">
-                                        <td class="px-4 py-3" colspan="2">TOTAL</td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($totalCapital, 0) }}</td>
-                                        <td class="px-4 py-3 text-right">100.0%</td>
-                                        <td colspan="3"></td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($investors->sum(fn($i) => $i->expense_owed), 0) }}</td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($investors->sum(fn($i) => $i->expense_paid), 0) }}</td>
-                                        <td colspan="2"></td>
-                                    </tr>
-                                </tfoot>
-                            @endif
-                        </table>
-                    </div>
-                    <div class="p-4 border-t border-gray-100">{{ $investors->withQueryString()->links() }}</div>
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
+                    <table id="investors-table" class="w-full text-sm display">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                            <tr>
+                                <th>Investor</th>
+                                <th>Role</th>
+                                <th class="text-right!">Capital</th>
+                                <th class="text-right!">Own %</th>
+                                <th class="text-right!">Herd Share</th>
+                                <th class="text-right!">Profit Share</th>
+                                <th class="text-right!">Split %</th>
+                                <th class="text-right!">Exp Owed</th>
+                                <th class="text-right!">Exp Paid</th>
+                                <th class="text-right!">Settlement</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -328,4 +274,43 @@
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.initServerDataTable === 'undefined') return;
+
+            var tbl = window.initServerDataTable('#investors-table', '{{ route('investors.data') }}', {
+                order: [[0, 'asc']],
+                columns: [
+                    { data: 'name', name: 'name' },
+                    { data: 'role', name: 'role' },
+                    { data: 'total_capital', name: 'total_capital', className: 'text-right' },
+                    { data: 'share_pct', name: 'share_pct', className: 'text-right' },
+                    { data: 'herd_share', name: 'herd_share', className: 'text-right' },
+                    { data: 'profit_share', name: 'profit_share', className: 'text-right' },
+                    { data: 'expense_split_pct', name: 'expense_split_pct', className: 'text-right' },
+                    { data: 'expense_owed', name: 'expense_owed', className: 'text-right' },
+                    { data: 'expense_paid', name: 'expense_paid', className: 'text-right' },
+                    { data: 'settlement_balance', name: 'settlement_balance', className: 'text-right' },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false },
+                ],
+            });
+
+            // Search input integration
+            var searchInput = document.getElementById('filter-q');
+            if (searchInput) {
+                var debounceTimer;
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function () {
+                        tbl.search(searchInput.value).draw();
+                    }, 300);
+                });
+            }
+            document.getElementById('filter-reset')?.addEventListener('click', function () {
+                if (searchInput) searchInput.value = '';
+                tbl.search('').draw();
+            });
+        });
+    </script>
 </x-app-layout>

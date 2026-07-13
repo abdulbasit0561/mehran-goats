@@ -8,6 +8,7 @@ use App\Models\Caretaker;
 use App\Models\Goat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\DataTables;
 
 class GoatController extends Controller
 {
@@ -75,6 +76,73 @@ class GoatController extends Controller
         $breeds = Breed::orderBy('name')->pluck('name', 'id');
 
         return view('goats.index', compact('goats', 'summary', 'breeds'));
+    }
+
+    /**
+     * Server-side DataTables AJAX endpoint for Goats.
+     */
+    public function data(Request $request)
+    {
+        $query = Goat::with(['breed', 'birthedRecords' => function ($q) {
+            $q->whereIn('pregnancy_status', ['bred', 'pregnant'])->latest('breeding_date');
+        }])->select('goats.*');
+
+        return DataTables::of($query)
+            ->filter(function ($query) use ($request) {
+                if ($search = $request->get('search')['value'] ?? null) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('tag_id', 'like', "%{$search}%")
+                          ->orWhere('name', 'like', "%{$search}%")
+                          ->orWhere('vendor', 'like', "%{$search}%")
+                          ->orWhereHas('breed', fn ($b) => $b->where('name', 'like', "%{$search}%"));
+                    });
+                }
+                if ($status = $request->get('status')) {
+                    $query->where('status', $status);
+                }
+                if ($breedId = $request->get('breed')) {
+                    $query->where('breed_id', $breedId);
+                }
+                if ($request->get('pregnant') === 'yes') {
+                    $query->whereHas('birthedRecords', fn ($q) => $q->whereIn('pregnancy_status', ['bred', 'pregnant']));
+                } elseif ($request->get('pregnant') === 'open') {
+                    $query->whereDoesntHave('birthedRecords', fn ($q) => $q->whereIn('pregnancy_status', ['bred', 'pregnant']));
+                }
+            })
+            ->editColumn('tag_id', fn (Goat $goat) => '<a href="' . route('goats.show', $goat) . '" class="text-indigo-600 font-medium">' . e($goat->tag_id) . '</a>')
+            ->addColumn('breed_name', fn (Goat $goat) => e($goat->breed?->name ?? '—'))
+            ->addColumn('status_badge', function (Goat $goat) {
+                $colors = ['sold' => 'bg-blue-100 text-blue-800', 'deceased' => 'bg-gray-200 text-gray-700', 'breeder' => 'bg-green-100 text-green-800'];
+                $cls = $colors[$goat->status] ?? 'bg-yellow-100 text-yellow-800';
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ' . $cls . '">' . ucfirst($goat->status) . '</span>';
+            })
+            ->addColumn('breeding', function (Goat $goat) {
+                if ($goat->gender !== 'female' || in_array($goat->status, ['sold', 'deceased'])) return '<span class="text-gray-300 text-xs">—</span>';
+                $preg = $goat->activePregnancy();
+                if ($preg) {
+                    return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">🤰 ' . ($preg->isConfirmed() ? 'Pregnant' : 'Bred') . ' (' . $preg->days_pregnant . 'd)</span>';
+                }
+                return '<a href="' . route('goats.breeding-records.create', $goat) . '" class="text-xs text-pink-600 hover:underline font-medium">🤰 Mark Bred</a>';
+            })
+            ->editColumn('purchase_date', fn (Goat $goat) => $goat->purchase_date?->format('M d, Y') ?? '—')
+            ->editColumn('vendor', fn (Goat $goat) => e($goat->vendor ?? '—'))
+            ->editColumn('purchase_price', fn (Goat $goat) => number_format($goat->purchase_price ?? 0, 0))
+            ->addColumn('estimated_value', fn (Goat $goat) => number_format($goat->current_value, 0))
+            ->addColumn('gain_loss', function (Goat $goat) {
+                if ($goat->status !== 'sold') return '—';
+                $cls = $goat->realized_gain_loss > 0 ? 'text-green-600' : ($goat->realized_gain_loss < 0 ? 'text-red-600' : 'text-gray-400');
+                $sign = $goat->realized_gain_loss >= 0 ? '+' : '';
+                return '<span class="font-medium ' . $cls . '">' . $sign . number_format($goat->realized_gain_loss, 0) . '</span>';
+            })
+            ->addColumn('days_held', fn (Goat $goat) => $goat->days_held ?? '—')
+            ->addColumn('actions', function (Goat $goat) {
+                return '<a href="' . route('goats.edit', $goat) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
+                    . '<form method="POST" action="' . route('goats.destroy', $goat) . '" class="inline" onsubmit="return confirm(\'Delete this goat?\')">'
+                    . csrf_field() . method_field('DELETE')
+                    . '<button type="submit" class="text-red-600 hover:underline text-xs">Delete</button></form>';
+            })
+            ->rawColumns(['tag_id', 'status_badge', 'breeding', 'gain_loss', 'actions'])
+            ->make(true);
     }
 
     public function create()

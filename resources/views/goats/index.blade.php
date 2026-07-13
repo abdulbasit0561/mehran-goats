@@ -171,178 +171,92 @@
 
             {{-- FILTERS (desktop) --}}
             <div class="desktop-only-table bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-                <form method="GET" action="{{ route('goats.index') }}" class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Search tag/name/vendor…" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
-                    <select name="status" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                <div class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
+                    <select id="filter-status" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">All Statuses</option>
                         @foreach (['kid','grower','breeder','sold','deceased'] as $s)
-                            <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                            <option value="{{ $s }}">{{ ucfirst($s) }}</option>
                         @endforeach
                     </select>
-                    <select name="breed" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <select id="filter-breed" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">All Breeds</option>
                         @foreach ($breeds as $id => $name)
-                            <option value="{{ $id }}" {{ (string) request('breed') === (string) $id ? 'selected' : '' }}>{{ $name }}</option>
+                            <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach
                     </select>
-                    <select name="pregnant" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <select id="filter-pregnant" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">All Breeding</option>
-                        <option value="yes" {{ request('pregnant') === 'yes' ? 'selected' : '' }}>🤰 Pregnant/Bred</option>
-                        <option value="open" {{ request('pregnant') === 'open' ? 'selected' : '' }}>Not Pregnant</option>
+                        <option value="yes">🤰 Pregnant/Bred</option>
+                        <option value="open">Not Pregnant</option>
                     </select>
-                    <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md text-sm font-medium hover:bg-gray-700">Filter</button>
-                    <a href="{{ route('goats.index') }}" class="text-sm text-gray-500 hover:underline">Reset</a>
-                </form>
+                    <button type="button" id="filter-reset" class="text-sm text-gray-500 hover:underline">Reset</button>
+                </div>
             </div>
 
             {{-- DESKTOP TABLE --}}
-            <form id="bulkForm" method="POST" action="{{ route('goats.bulk-destroy') }}" onsubmit="return confirm('Delete the selected goats? This cannot be undone.')" class="desktop-only-table">
-                @csrf @method('DELETE')
-
-                {{-- Bulk action bar --}}
-                <div id="bulkBar" class="hidden bg-indigo-50 border border-indigo-200 rounded-lg p-3 mb-4 flex items-center justify-between">
-                    <span class="text-sm font-medium text-indigo-800">
-                        <span id="selectedCount">0</span> goat(s) selected
-                    </span>
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition">
-                        🗑️ Delete Selected
-                    </button>
+            <div class="desktop-only-table">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
+                    <table id="goats-table" class="w-full text-sm display">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                            <tr>
+                                <th>Tag</th>
+                                <th>Breed</th>
+                                <th>Gender</th>
+                                <th>Status</th>
+                                <th>Breeding</th>
+                                <th>Purchase Date</th>
+                                <th>Vendor</th>
+                                <th class="text-right!">Purchase Price</th>
+                                <th class="text-right!">Est. Value</th>
+                                <th class="text-right!">Gain/Loss</th>
+                                <th>Days</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
-
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm whitespace-nowrap">
-                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
-                                <tr>
-                                    <th class="px-4 py-3 text-center w-10">
-                                        <input type="checkbox" id="selectAll" class="rounded text-indigo-600 border-gray-300 focus:ring-indigo-500" />
-                                    </th>
-                                    <th class="px-4 py-3 text-left">Tag</th>
-                                    <th class="px-4 py-3 text-left">Breed</th>
-                                    <th class="px-4 py-3 text-left">Gender</th>
-                                    <th class="px-4 py-3 text-left">Status</th>
-                                    <th class="px-4 py-3 text-left">Breeding</th>
-                                    <th class="px-4 py-3 text-left">Purchase Date</th>
-                                    <th class="px-4 py-3 text-left">Vendor</th>
-                                    <th class="px-4 py-3 text-right">Purchase Price</th>
-                                    <th class="px-4 py-3 text-right">Est. Value</th>
-                                    <th class="px-4 py-3 text-right">Gain/Loss</th>
-                                    <th class="px-4 py-3 text-center">Days</th>
-                                    <th class="px-4 py-3 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                @forelse ($goats as $goat)
-                                    <tr class="hover:bg-gray-50" x-data="{ checked: false }">
-                                        <td class="px-4 py-3 text-center">
-                                            <input type="checkbox" name="ids[]" value="{{ $goat->id }}"
-                                                   class="row-check rounded text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                                   x-model="checked" />
-                                        </td>
-                                        <td class="px-4 py-3 font-medium text-indigo-600">
-                                            <a href="{{ route('goats.show', $goat) }}">{{ $goat->tag_id }}</a>
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-600">{{ $goat->breed->name }}</td>
-                                        <td class="px-4 py-3 capitalize">{{ $goat->gender }}</td>
-                                        <td class="px-4 py-3">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                                @if($goat->status === 'sold') bg-blue-100 text-blue-800
-                                                @elseif($goat->status === 'deceased') bg-gray-200 text-gray-700
-                                                @elseif($goat->status === 'breeder') bg-green-100 text-green-800
-                                                @else bg-yellow-100 text-yellow-800 @endif">
-                                                {{ ucfirst($goat->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            @if($goat->gender === 'female' && !in_array($goat->status, ['sold', 'deceased']))
-                                                @php $activePreg = $goat->activePregnancy(); @endphp
-                                                @if($activePreg)
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">
-                                                        🤰 {{ $activePreg->isConfirmed() ? 'Pregnant' : 'Bred' }} ({{ $activePreg->days_pregnant }}d)
-                                                    </span>
-                                                    <div class="mt-1 flex gap-2">
-                                                        @if(!$activePreg->isConfirmed())
-                                                            <form method="POST" action="{{ route('breeding-records.mark-pregnant', $activePreg) }}">
-                                                                @csrf
-                                                                <button class="text-xs text-pink-600 hover:underline">Confirm</button>
-                                                            </form>
-                                                        @endif
-                                                        <a href="{{ route('breeding-records.kidding', $activePreg) }}" class="text-xs text-green-600 hover:underline">Kidding</a>
-                                                    </div>
-                                                @else
-                                                    <a href="{{ route('goats.breeding-records.create', $goat) }}" class="text-xs text-pink-600 hover:underline font-medium">🤰 Mark Bred</a>
-                                                @endif
-                                            @else
-                                                <span class="text-gray-300 text-xs">—</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-3 text-gray-600">{{ $goat->purchase_date?->format('M d, Y') ?? '—' }}</td>
-                                        <td class="px-4 py-3 text-gray-600">{{ $goat->vendor ?? '—' }}</td>
-                                        <td class="px-4 py-3 text-right">{{ number_format($goat->purchase_price, 0) }}</td>
-                                        <td class="px-4 py-3 text-right font-medium text-gray-700">{{ number_format($goat->current_value, 0) }}</td>
-                                        <td class="px-4 py-3 text-right font-medium
-                                            @if($goat->realized_gain_loss > 0) text-green-600
-                                            @elseif($goat->realized_gain_loss < 0) text-red-600
-                                            @else text-gray-400 @endif">
-                                            @if($goat->status === 'sold')
-                                                {{ $goat->realized_gain_loss >= 0 ? '+' : '' }}{{ number_format($goat->realized_gain_loss, 0) }}
-                                            @else
-                                                —
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-3 text-center text-gray-500">{{ $goat->days_held ?? '—' }}</td>
-                                        <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
-                                            <a href="{{ route('goats.edit', $goat) }}" class="text-indigo-600 hover:underline text-xs">Edit</a>
-                                            <form method="POST" action="{{ route('goats.destroy', $goat) }}" class="inline" onsubmit="return confirm('Delete this goat?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:underline text-xs">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="13" class="px-4 py-8 text-center text-gray-400">No goats found. <a href="{{ route('goats.create') }}" class="text-indigo-600 hover:underline">Add your first goat</a></td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="p-4 border-t border-gray-100">
-                        {{ $goats->withQueryString()->links() }}
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const selectAll = document.getElementById('selectAll');
-            const bulkBar   = document.getElementById('bulkBar');
-            const countEl   = document.getElementById('selectedCount');
-            const checkboxes = () => document.querySelectorAll('.row-check');
+            if (typeof window.initServerDataTable === 'undefined') return;
 
-            function updateBar() {
-                const checked = document.querySelectorAll('.row-check:checked');
-                countEl.textContent = checked.length;
-                bulkBar.classList.toggle('hidden', checked.length === 0);
-            }
-
-            selectAll?.addEventListener('change', function () {
-                checkboxes().forEach(cb => { cb.checked = this.checked; });
-                updateBar();
+            var tbl = window.initServerDataTable('#goats-table', '{{ route('goats.data') }}', {
+                order: [[0, 'asc']],
+                columns: [
+                    { data: 'tag_id', name: 'tag_id' },
+                    { data: 'breed_name', name: 'breed_name' },
+                    { data: 'gender', name: 'gender' },
+                    { data: 'status_badge', name: 'status_badge' },
+                    { data: 'breeding', name: 'breeding' },
+                    { data: 'purchase_date', name: 'purchase_date' },
+                    { data: 'vendor', name: 'vendor' },
+                    { data: 'purchase_price', name: 'purchase_price', className: 'text-right' },
+                    { data: 'estimated_value', name: 'estimated_value', className: 'text-right' },
+                    { data: 'gain_loss', name: 'gain_loss', className: 'text-right' },
+                    { data: 'days_held', name: 'days_held', className: 'text-center' },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false },
+                ],
+                extraData: function () {
+                    return {
+                        status: document.getElementById('filter-status')?.value || '',
+                        breed: document.getElementById('filter-breed')?.value || '',
+                        pregnant: document.getElementById('filter-pregnant')?.value || '',
+                    };
+                }
             });
 
-            document.addEventListener('change', function (e) {
-                if (e.target.classList.contains('row-check')) {
-                    const total = checkboxes().length;
-                    const checked = document.querySelectorAll('.row-check:checked').length;
-                    if (selectAll) {
-                        selectAll.checked = total > 0 && total === checked;
-                        selectAll.indeterminate = checked > 0 && checked < total;
-                    }
-                    updateBar();
-                }
+            ['filter-status', 'filter-breed', 'filter-pregnant'].forEach(function (id) {
+                document.getElementById(id)?.addEventListener('change', function () { tbl.ajax.reload(); });
+            });
+            document.getElementById('filter-reset')?.addEventListener('click', function () {
+                document.getElementById('filter-status').value = '';
+                document.getElementById('filter-breed').value = '';
+                document.getElementById('filter-pregnant').value = '';
+                tbl.ajax.reload();
             });
         });
     </script>

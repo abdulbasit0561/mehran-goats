@@ -77,104 +77,52 @@
                     </form>
                 </div>
                 {{-- Desktop version --}}
-                <form method="GET" action="{{ route('transactions.index') }}" class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
-                    <select name="type" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                <div class="hidden sm:flex sm:flex-wrap sm:gap-3 sm:items-center">
+                    <select id="filter-type" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
                         <option value="">All Types</option>
-                        <option value="income" {{ request('type') === 'income' ? 'selected' : '' }}>Income</option>
-                        <option value="expense" {{ request('type') === 'expense' ? 'selected' : '' }}>Expense</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
                     </select>
-                    <select name="category" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                    <select id="filter-category" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
                         <option value="">All Categories</option>
                         @foreach ($categories as $cat)
-                            <option value="{{ $cat }}" {{ request('category') === $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                            <option value="{{ $cat }}">{{ $cat }}</option>
                         @endforeach
                     </select>
-                    <select name="paid_by" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
+                    <select id="filter-paid-by" class="border border-gray-300 rounded-md px-3 py-2 text-sm">
                         <option value="">All Payers</option>
                         @foreach ($investors as $inv)
-                            <option value="{{ $inv->id }}" {{ (string) request('paid_by') === (string) $inv->id ? 'selected' : '' }}>{{ $inv->name }}</option>
+                            <option value="{{ $inv->id }}">{{ $inv->name }}</option>
                         @endforeach
                     </select>
-                    <input type="date" name="from" value="{{ request('from') }}" class="border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="From" />
-                    <input type="date" name="to" value="{{ request('to') }}" class="border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="To" />
-                    <button type="submit" class="px-4 py-2 bg-gray-600 text-white rounded-md text-sm font-medium">Filter</button>
-                    <a href="{{ route('transactions.index') }}" class="text-sm text-gray-500 hover:underline">Reset</a>
-                </form>
+                    <input type="date" id="filter-from" class="border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="From" />
+                    <input type="date" id="filter-to" class="border border-gray-300 rounded-md px-3 py-2 text-sm" placeholder="To" />
+                    <button type="button" id="filter-reset" class="text-sm text-gray-500 hover:underline">Reset</button>
+                </div>
             </div>
 
             {{-- ============================================================= --}}
             {{-- DESKTOP TABLE (hidden on mobile)                              --}}
             {{-- ============================================================= --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg desktop-only-table">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm whitespace-nowrap">
-                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
-                            <tr>
-                                <th class="px-4 py-3 text-left">Date</th>
-                                <th class="px-4 py-3 text-left">Type</th>
-                                <th class="px-4 py-3 text-left">Category</th>
-                                <th class="px-4 py-3 text-left">Description</th>
-                                <th class="px-4 py-3 text-left">Paid By</th>
-                                <th class="px-4 py-3 text-left">Method</th>
-                                <th class="px-4 py-3 text-left">Recurring</th>
-                                <th class="px-4 py-3 text-right">Budget</th>
-                                <th class="px-4 py-3 text-right">Amount</th>
-                                <th class="px-4 py-3 text-right">Variance</th>
-                                <th class="px-4 py-3 text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse ($transactions as $t)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-3 text-gray-600">{{ $t->date->format('M d, Y') }}</td>
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                            {{ $t->type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                            {{ ucfirst($t->type) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3">{{ $t->category }}</td>
-                                    <td class="px-4 py-3 text-gray-500 max-w-[200px] truncate">{{ $t->notes ?? '—' }}</td>
-                                    <td class="px-4 py-3 text-gray-500">{{ $t->investor?->name ?? '—' }}</td>
-                                    <td class="px-4 py-3">
-                                        @if ($t->payment_method)
-                                            <span class="text-xs text-gray-500">{{ str_replace('_', ' ', ucfirst($t->payment_method)) }}</span>
-                                        @else
-                                            —
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
-                                        @if ($t->is_recurring)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Yes</span>
-                                        @else
-                                            <span class="text-gray-300">—</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-4 py-3 text-right text-gray-500">{{ $t->budget_amount ? number_format($t->budget_amount, 0) : '—' }}</td>
-                                    <td class="px-4 py-3 text-right font-medium {{ $t->type === 'income' ? 'text-green-600' : 'text-red-600' }}">
-                                        {{ $t->type === 'income' ? '+' : '-' }}{{ number_format($t->amount, 0) }}
-                                    </td>
-                                    <td class="px-4 py-3 text-right text-xs
-                                        @if($t->variance !== null)
-                                            {{ $t->variance >= 0 ? 'text-green-600' : 'text-red-600' }}
-                                        @endif">
-                                        {{ $t->variance !== null ? number_format($t->variance, 0) : '—' }}
-                                    </td>
-                                    <td class="px-4 py-3 text-center space-x-2 whitespace-nowrap">
-                                        <a href="{{ route('transactions.edit', $t) }}" class="text-indigo-600 hover:underline text-xs">Edit</a>
-                                        <form method="POST" action="{{ route('transactions.destroy', $t) }}" class="inline" onsubmit="return confirm('Delete this transaction?')">
-                                            @csrf @method('DELETE')
-                                            <button class="text-red-600 hover:underline text-xs">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="11" class="px-4 py-8 text-center text-gray-400">No transactions found. <a href="{{ route('transactions.create') }}" class="text-indigo-600 hover:underline">Add one</a></td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="p-4 border-t border-gray-100">{{ $transactions->withQueryString()->links() }}</div>
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 desktop-only-table">
+                <table id="transactions-table" class="w-full text-sm display">
+                    <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Paid By</th>
+                            <th>Method</th>
+                            <th>Recurring</th>
+                            <th class="text-right!">Budget</th>
+                            <th class="text-right!">Amount</th>
+                            <th class="text-right!">Variance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
 
             {{-- ============================================================= --}}
@@ -229,4 +177,47 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.initServerDataTable === 'undefined') return;
+
+            var tbl = window.initServerDataTable('#transactions-table', '{{ route('transactions.data') }}', {
+                order: [[0, 'desc']],
+                columns: [
+                    { data: 'date', name: 'date' },
+                    { data: 'type', name: 'type' },
+                    { data: 'category', name: 'category' },
+                    { data: 'notes', name: 'notes' },
+                    { data: 'paid_by', name: 'paid_by' },
+                    { data: 'payment_method', name: 'payment_method' },
+                    { data: 'is_recurring', name: 'is_recurring' },
+                    { data: 'budget_amount', name: 'budget_amount', className: 'text-right' },
+                    { data: 'amount', name: 'amount', className: 'text-right' },
+                    { data: 'variance', name: 'variance', className: 'text-right' },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false },
+                ],
+                extraData: function () {
+                    return {
+                        type: document.getElementById('filter-type')?.value || '',
+                        category: document.getElementById('filter-category')?.value || '',
+                        paid_by: document.getElementById('filter-paid-by')?.value || '',
+                        from: document.getElementById('filter-from')?.value || '',
+                        to: document.getElementById('filter-to')?.value || '',
+                    };
+                }
+            });
+
+            ['filter-type', 'filter-category', 'filter-paid-by', 'filter-from', 'filter-to'].forEach(function (id) {
+                document.getElementById(id)?.addEventListener('change', function () { tbl.ajax.reload(); });
+            });
+            document.getElementById('filter-reset')?.addEventListener('click', function () {
+                ['filter-type', 'filter-category', 'filter-paid-by', 'filter-from', 'filter-to'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                tbl.ajax.reload();
+            });
+        });
+    </script>
 </x-app-layout>

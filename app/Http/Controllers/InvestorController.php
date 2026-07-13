@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Investor;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class InvestorController extends Controller
 {
@@ -29,6 +30,57 @@ class InvestorController extends Controller
         $allInvestors = Investor::orderBy('name')->pluck('name', 'id');
 
         return view('investors.index', compact('investors', 'totalCapital', 'totalExpenseSplit', 'allInvestors'));
+    }
+
+    /**
+     * Server-side DataTables AJAX endpoint for Investors.
+     */
+    public function data(Request $request)
+    {
+        $totalCapital = (float) \DB::table('investments')->sum('amount');
+
+        $query = Investor::with('investments')->select('investors.*');
+
+        return DataTables::of($query)
+            ->filter(function ($query) use ($request) {
+                if ($search = $request->get('search')['value'] ?? null) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%")
+                          ->orWhere('phone', 'like', "%{$search}%");
+                    });
+                }
+            })
+            ->editColumn('name', function (Investor $investor) {
+                return '<a href="' . route('investors.show', $investor) . '" class="text-indigo-600 font-medium hover:underline">' . e($investor->name) . '</a>';
+            })
+            ->addColumn('role', function (Investor $investor) {
+                if ($investor->isManager()) {
+                    return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">Manager</span>';
+                }
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Investor</span>';
+            })
+            ->addColumn('total_capital', fn (Investor $investor) => number_format((float) $investor->total_capital, 0))
+            ->addColumn('share_pct', fn (Investor $investor) => number_format($investor->share_pct, 1) . '%')
+            ->addColumn('herd_share', fn (Investor $investor) => number_format($investor->herd_share, 0))
+            ->addColumn('profit_share', fn (Investor $investor) => number_format($investor->profit_share, 0))
+            ->editColumn('expense_split_pct', fn (Investor $investor) => number_format((float) $investor->expense_split_pct, 1) . '%')
+            ->addColumn('expense_owed', fn (Investor $investor) => number_format($investor->expense_owed, 0))
+            ->addColumn('expense_paid', fn (Investor $investor) => number_format($investor->expense_paid, 0))
+            ->addColumn('settlement_balance', function (Investor $investor) {
+                $cls = $investor->settlement_balance >= 0 ? 'text-green-600' : 'text-red-600';
+                $sign = $investor->settlement_balance >= 0 ? '+' : '';
+                return '<span class="font-semibold ' . $cls . '">' . $sign . number_format($investor->settlement_balance, 0) . '</span>';
+            })
+            ->addColumn('actions', function (Investor $investor) {
+                return '<button type="button" onclick="window.dispatchEvent(new CustomEvent(\'open-investment-modal\', { detail: { investorId: ' . $investor->id . ' } }))" class="text-emerald-600 hover:underline text-xs">Investment</button> '
+                    . '<a href="' . route('investors.edit', $investor) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
+                    . '<form method="POST" action="' . route('investors.destroy', $investor) . '" class="inline" onsubmit="return confirm(\'Delete this investor?\')">'
+                    . csrf_field() . method_field('DELETE')
+                    . '<button class="text-red-600 hover:underline text-xs">Delete</button></form>';
+            })
+            ->rawColumns(['name', 'role', 'settlement_balance', 'actions'])
+            ->make(true);
     }
 
     public function create()

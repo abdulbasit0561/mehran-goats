@@ -58,94 +58,103 @@
             </div>
 
             <!-- Distributions -->
-            <div class="bg-white shadow-sm rounded-lg mb-6">
-                <div class="p-6 border-b border-gray-100">
+            <div class="bg-white shadow-sm rounded-lg mb-6 p-4">
+                <div class="p-2 border-b border-gray-100 mb-3">
                     <h3 class="font-semibold text-gray-900">Recent Profit Distributions</h3>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                <table id="pl-distributions-table" class="w-full text-sm display">
+                    <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                        <tr>
+                            <th>Investor</th>
+                            <th>Period</th>
+                            <th class="text-right!">Share %</th>
+                            <th class="text-right!">Total Profit</th>
+                            <th class="text-right!">Amount</th>
+                            <th class="text-center!">Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($distributions as $dist)
                             <tr>
-                                <th class="px-6 py-3 text-left">Investor</th>
-                                <th class="px-6 py-3 text-left">Period</th>
-                                <th class="px-6 py-3 text-right">Share %</th>
-                                <th class="px-6 py-3 text-right">Total Profit</th>
-                                <th class="px-6 py-3 text-right">Amount</th>
-                                <th class="px-6 py-3 text-center">Status</th>
-                                <th class="px-6 py-3"></th>
+                                <td class="px-6 py-3 font-medium">{{ $dist->investor->name }}</td>
+                                <td class="px-6 py-3 text-gray-600">{{ $dist->period_start->format('M d') }} – {{ $dist->period_end->format('M d, Y') }}</td>
+                                <td class="px-6 py-3 text-right">{{ number_format($dist->share_pct, 2) }}%</td>
+                                <td class="px-6 py-3 text-right">{{ number_format($dist->total_profit, 2) }}</td>
+                                <td class="px-6 py-3 text-right font-medium">{{ number_format($dist->amount, 2) }}</td>
+                                <td class="px-6 py-3 text-center">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                        {{ $dist->status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
+                                        {{ ucfirst($dist->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-3 text-center">
+                                    @if ($dist->status === 'pending')
+                                        <form method="POST" action="{{ route('reports.distributions.mark-paid', $dist) }}" class="inline">
+                                            @csrf
+                                            <button class="text-green-600 text-xs hover:underline">Mark Paid</button>
+                                        </form>
+                                    @endif
+                                </td>
                             </tr>
+                        @empty
+                            <tr><td colspan="7" class="px-6 py-6 text-center text-gray-400">No distributions yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Income/Expense detail -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white shadow-sm rounded-lg p-4">
+                    <div class="p-2 border-b border-gray-100 mb-3"><h3 class="font-semibold text-green-700">Income Detail ({{ $income->count() }})</h3></div>
+                    <table id="pl-income-table" class="w-full text-sm display">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                            <tr><th>Date</th><th>Category</th><th class="text-right!">Amount</th></tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @forelse ($distributions as $dist)
+                            @forelse ($income as $t)
                                 <tr>
-                                    <td class="px-6 py-3 font-medium">{{ $dist->investor->name }}</td>
-                                    <td class="px-6 py-3 text-gray-600">{{ $dist->period_start->format('M d') }} – {{ $dist->period_end->format('M d, Y') }}</td>
-                                    <td class="px-6 py-3 text-right">{{ number_format($dist->share_pct, 2) }}%</td>
-                                    <td class="px-6 py-3 text-right">{{ number_format($dist->total_profit, 2) }}</td>
-                                    <td class="px-6 py-3 text-right font-medium">{{ number_format($dist->amount, 2) }}</td>
-                                    <td class="px-6 py-3 text-center">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                            {{ $dist->status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800' }}">
-                                            {{ ucfirst($dist->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-3 text-center">
-                                        @if ($dist->status === 'pending')
-                                            <form method="POST" action="{{ route('reports.distributions.mark-paid', $dist) }}" class="inline">
-                                                @csrf
-                                                <button class="text-green-600 text-xs hover:underline">Mark Paid</button>
-                                            </form>
-                                        @endif
-                                    </td>
+                                    <td class="px-6 py-2 text-gray-600">{{ $t->date->format('M d') }}</td>
+                                    <td class="px-6 py-2">{{ $t->category }}</td>
+                                    <td class="px-6 py-2 text-right font-medium text-green-600">{{ number_format($t->amount, 2) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="px-6 py-6 text-center text-gray-400">No distributions yet.</td></tr>
+                                <tr><td colspan="3" class="px-6 py-4 text-center text-gray-400">No income in this period.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-white shadow-sm rounded-lg p-4">
+                    <div class="p-2 border-b border-gray-100 mb-3"><h3 class="font-semibold text-red-700">Expense Detail ({{ $expense->count() }})</h3></div>
+                    <table id="pl-expense-table" class="w-full text-sm display">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                            <tr><th>Date</th><th>Category</th><th class="text-right!">Amount</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse ($expense as $t)
+                                <tr>
+                                    <td class="px-6 py-2 text-gray-600">{{ $t->date->format('M d') }}</td>
+                                    <td class="px-6 py-2">{{ $t->category }}</td>
+                                    <td class="px-6 py-2 text-right font-medium text-red-600">{{ number_format($t->amount, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="3" class="px-6 py-4 text-center text-gray-400">No expenses in this period.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Income detail -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white shadow-sm rounded-lg">
-                    <div class="p-6 border-b border-gray-100"><h3 class="font-semibold text-green-700">Income Detail ({{ $income->count() }})</h3></div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <tbody class="divide-y divide-gray-100">
-                                @forelse ($income as $t)
-                                    <tr>
-                                        <td class="px-6 py-2 text-gray-600">{{ $t->date->format('M d') }}</td>
-                                        <td class="px-6 py-2">{{ $t->category }}</td>
-                                        <td class="px-6 py-2 text-right font-medium text-green-600">{{ number_format($t->amount, 2) }}</td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="3" class="px-6 py-4 text-center text-gray-400">No income in this period.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="bg-white shadow-sm rounded-lg">
-                    <div class="p-6 border-b border-gray-100"><h3 class="font-semibold text-red-700">Expense Detail ({{ $expense->count() }})</h3></div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <tbody class="divide-y divide-gray-100">
-                                @forelse ($expense as $t)
-                                    <tr>
-                                        <td class="px-6 py-2 text-gray-600">{{ $t->date->format('M d') }}</td>
-                                        <td class="px-6 py-2">{{ $t->category }}</td>
-                                        <td class="px-6 py-2 text-right font-medium text-red-600">{{ number_format($t->amount, 2) }}</td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="3" class="px-6 py-4 text-center text-gray-400">No expenses in this period.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.initClientDataTable === 'undefined') return;
+            window.initClientDataTable('#pl-distributions-table', { order: [[1, 'desc']], columnDefs: [{ orderable: false, targets: [5, 6] }] });
+            window.initClientDataTable('#pl-income-table', { order: [[0, 'desc']], searching: false, lengthChange: false });
+            window.initClientDataTable('#pl-expense-table', { order: [[0, 'desc']], searching: false, lengthChange: false });
+        });
+    </script>
 </x-app-layout>

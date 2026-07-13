@@ -6,6 +6,7 @@ use App\Models\Goat;
 use App\Models\Investor;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class TransactionController extends Controller
 {
@@ -53,6 +54,75 @@ class TransactionController extends Controller
         ];
 
         return view('transactions.index', compact('transactions', 'categories', 'investors', 'summary'));
+    }
+
+    /**
+     * Server-side DataTables AJAX endpoint for Transactions.
+     */
+    public function data(Request $request)
+    {
+        $query = Transaction::with(['goat', 'investor'])->select('transactions.*');
+
+        return DataTables::of($query)
+            ->filter(function ($query) use ($request) {
+                if ($search = $request->get('search')['value'] ?? null) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('category', 'like', "%{$search}%")
+                          ->orWhere('notes', 'like', "%{$search}%")
+                          ->orWhere('type', 'like', "%{$search}%")
+                          ->orWhereHas('investor', fn ($inv) => $inv->where('name', 'like', "%{$search}%"));
+                    });
+                }
+                if ($type = $request->get('type')) {
+                    $query->where('type', $type);
+                }
+                if ($category = $request->get('category')) {
+                    $query->where('category', $category);
+                }
+                if ($investorId = $request->get('paid_by')) {
+                    $query->where('investor_id', $investorId);
+                }
+                if ($request->filled('from')) {
+                    $query->where('date', '>=', $request->get('from'));
+                }
+                if ($request->filled('to')) {
+                    $query->where('date', '<=', $request->get('to'));
+                }
+            })
+            ->editColumn('date', fn (Transaction $t) => $t->date->format('M d, Y'))
+            ->editColumn('type', function (Transaction $t) {
+                $cls = $t->type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ' . $cls . '">' . ucfirst($t->type) . '</span>';
+            })
+            ->editColumn('category', fn (Transaction $t) => e($t->category))
+            ->addColumn('notes', fn (Transaction $t) => '<span class="text-gray-500">' . e($t->notes ?? '—') . '</span>')
+            ->addColumn('paid_by', fn (Transaction $t) => e($t->investor?->name ?? '—'))
+            ->addColumn('payment_method', fn (Transaction $t) => $t->payment_method ? '<span class="text-xs text-gray-500">' . e(str_replace('_', ' ', ucfirst($t->payment_method))) . '</span>' : '—')
+            ->addColumn('is_recurring', function (Transaction $t) {
+                if ($t->is_recurring) {
+                    return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">Yes</span>';
+                }
+                return '<span class="text-gray-300">—</span>';
+            })
+            ->addColumn('budget_amount', fn (Transaction $t) => $t->budget_amount ? number_format($t->budget_amount, 0) : '—')
+            ->addColumn('amount', function (Transaction $t) {
+                $cls = $t->type === 'income' ? 'text-green-600' : 'text-red-600';
+                $sign = $t->type === 'income' ? '+' : '-';
+                return '<span class="font-medium ' . $cls . '">' . $sign . number_format($t->amount, 0) . '</span>';
+            })
+            ->addColumn('variance', function (Transaction $t) {
+                if ($t->variance === null) return '—';
+                $cls = $t->variance >= 0 ? 'text-green-600' : 'text-red-600';
+                return '<span class="text-xs ' . $cls . '">' . number_format($t->variance, 0) . '</span>';
+            })
+            ->addColumn('actions', function (Transaction $t) {
+                return '<a href="' . route('transactions.edit', $t) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
+                    . '<form method="POST" action="' . route('transactions.destroy', $t) . '" class="inline" onsubmit="return confirm(\'Delete this transaction?\')">'
+                    . csrf_field() . method_field('DELETE')
+                    . '<button class="text-red-600 hover:underline text-xs">Delete</button></form>';
+            })
+            ->rawColumns(['type', 'notes', 'payment_method', 'is_recurring', 'amount', 'variance', 'actions'])
+            ->make(true);
     }
 
     public function create()

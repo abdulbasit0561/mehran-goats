@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
 
     // Goats (full resource)
     Route::delete('/goats/bulk', [GoatController::class, 'bulkDestroy'])->name('goats.bulk-destroy');
+    Route::get('/goats/data', [GoatController::class, 'data'])->name('goats.data');
     Route::resource('goats', GoatController::class);
 
     // Caretakers (every Nth kid share)
@@ -72,6 +73,7 @@ Route::middleware('auth')->group(function () {
         ->name('investments.quick-add');
 
     // Investors (full resource)
+    Route::get('/investors/data', [InvestorController::class, 'data'])->name('investors.data');
     Route::resource('investors', InvestorController::class);
 
     // Nested investments under investors
@@ -91,6 +93,7 @@ Route::middleware('auth')->group(function () {
         ->name('ownership.destroy');
 
     // Transactions (full resource)
+    Route::get('/transactions/data', [TransactionController::class, 'data'])->name('transactions.data');
     Route::resource('transactions', TransactionController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
@@ -121,6 +124,7 @@ Route::middleware('auth')->group(function () {
     // Activity Logs (super admin only)
     Route::middleware('super_admin')->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/activity-logs/data', [ActivityLogController::class, 'data'])->name('activity-logs.data');
         Route::get('/activity-logs/{activity_log}', [ActivityLogController::class, 'show'])->name('activity-logs.show');
     });
 });
