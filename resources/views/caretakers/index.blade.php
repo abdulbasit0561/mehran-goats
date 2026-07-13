@@ -7,7 +7,7 @@
     </x-slot>
 
     <div class="py-6 sm:py-12 page-content">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
 
             @if (session('success'))
                 <div class="mb-6 rounded-md bg-green-50 p-4 border border-green-200">

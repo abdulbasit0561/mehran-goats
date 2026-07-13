@@ -10,7 +10,7 @@
     </x-slot>
 
     <div class="py-6 sm:py-12 page-content">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
 
             {{-- Flash messages --}}
             @if (session('success'))
@@ -69,8 +69,8 @@
                             <tr>
                                 <th>Breed</th>
                                 <th class="text-center!">Goats</th>
-                                <th class="text-center!">♂ Male</th>
-                                <th class="text-center!">♀ Female</th>
+                                <th class="text-center!">Male</th>
+                                <th class="text-center!">Female</th>
                                 <th>Description</th>
                                 <th>Actions</th>
                             </tr>
@@ -80,8 +80,8 @@
                                 <tr>
                                     <td class="font-medium text-gray-900">{{ $breed->name }}</td>
                                     <td class="text-center">{{ $breed->goats_count }}</td>
-                                    <td class="text-center">♂ {{ $breed->male_goats_count }} male</td>
-                                    <td class="text-center">♀ {{ $breed->female_goats_count }} female</td>
+                                    <td class="text-center">{{ $breed->male_goats_count }}</td>
+                                    <td class="text-center">{{ $breed->female_goats_count }}</td>
                                     <td class="text-gray-500">{{ $breed->description ?? '—' }}</td>
                                     <td>
                                         <a href="{{ route('breeds.edit', $breed) }}" class="text-indigo-600 hover:underline text-xs">Edit</a>

@@ -7,7 +7,7 @@
     </x-slot>
 
     <div class="py-6 sm:py-12 page-content">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4">
                 <table id="reports-investors-table" class="w-full text-sm display">
                     <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
