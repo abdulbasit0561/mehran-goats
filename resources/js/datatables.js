@@ -30,8 +30,6 @@ const commonDefaults = {
 
 // Tailwind-ish styling overrides — DOM layout
 const styleOverrides = {
-    // If custom filters are provided, they go in the left slot of the top row;
-    // otherwise just the DataTables search input.
     dom: '<"flex flex-wrap items-center justify-between gap-3 mb-3"' +
             '<"flex flex-wrap items-center gap-2 min-w-0 dt-filter-bar">' +
             '<"flex items-center gap-3 ml-auto"lf>>' +
@@ -44,17 +42,19 @@ const styleOverrides = {
 /**
  * Build filter <select> elements and a reset button, inject them into
  * the DataTables toolbar slot (.dt-filter-bar).
+ *
+ * Called from initComplete so the wrapper element exists in the DOM.
  */
-function buildFilters(api, tableId, filters) {
-    if (!filters || filters.length === 0) return;
+function buildFilters(settings, selector, filters) {
+    var api = new $.fn.dataTable.Api(settings);
+    var wrapper = document.querySelector(selector + '_wrapper');
+    if (!wrapper) return;
 
-    var bar = document.querySelector(tableId + '_wrapper .dt-filter-bar');
+    var bar = wrapper.querySelector('.dt-filter-bar');
     if (!bar) return;
 
-    // Clear any leftover
-    bar.innerHTML = '';
-
-    var state = {};
+    // Don't rebuild if already built
+    if (bar.querySelector('select[data-filter-key]')) return;
 
     filters.forEach(function (f) {
         var sel = document.createElement('select');
@@ -74,11 +74,9 @@ function buildFilters(api, tableId, filters) {
         });
 
         sel.addEventListener('change', function () {
-            state[f.key] = this.value;
             api.ajax.reload();
         });
 
-        state[f.key] = '';
         bar.appendChild(sel);
     });
 
@@ -88,14 +86,12 @@ function buildFilters(api, tableId, filters) {
     reset.className = 'dt-filter-reset';
     reset.textContent = 'Reset';
     reset.addEventListener('click', function () {
-        bar.querySelectorAll('select').forEach(function (s) { s.value = ''; });
-        Object.keys(state).forEach(function (k) { state[k] = ''; });
+        bar.querySelectorAll('select[data-filter-key]').forEach(function (s) {
+            s.value = '';
+        });
         api.search('').draw();
     });
     bar.appendChild(reset);
-
-    // Expose state getter on the API instance
-    api._filterState = function () { return Object.assign({}, state); };
 }
 
 /**
@@ -107,6 +103,7 @@ function buildFilters(api, tableId, filters) {
  */
 window.initServerDataTable = function (selector, ajaxUrl, extra) {
     if (typeof $ === 'undefined') return null;
+    if (extra === undefined) extra = {};
 
     var config = {
         ...commonDefaults,
@@ -117,14 +114,14 @@ window.initServerDataTable = function (selector, ajaxUrl, extra) {
             url: ajaxUrl,
             type: 'GET',
             data: function (d) {
-                // Merge custom filter values
-                if (extra.filters && extra.filters.length > 0) {
-                    var bar = document.querySelector(selector + '_wrapper .dt-filter-bar');
-                    if (bar) {
-                        bar.querySelectorAll('select[data-filter-key]').forEach(function (sel) {
+                // Merge custom filter values from the toolbar dropdowns
+                var wrapper = document.querySelector(selector + '_wrapper');
+                if (wrapper) {
+                    wrapper.querySelectorAll('select[data-filter-key]').forEach(function (sel) {
+                        if (sel.value) {
                             d[sel.dataset.filterKey] = sel.value;
-                        });
-                    }
+                        }
+                    });
                 }
             },
         },
@@ -134,13 +131,14 @@ window.initServerDataTable = function (selector, ajaxUrl, extra) {
         drawCallback: extra.drawCallback || function () {},
     };
 
-    var api = $(selector).DataTable(config);
-
+    // Build filter dropdowns after DataTables renders the wrapper
     if (extra.filters && extra.filters.length > 0) {
-        buildFilters(api, selector, extra.filters);
+        config.initComplete = function (settings) {
+            buildFilters(settings, selector, extra.filters);
+        };
     }
 
-    return api;
+    return $(selector).DataTable(config);
 };
 
 /**
@@ -148,6 +146,7 @@ window.initServerDataTable = function (selector, ajaxUrl, extra) {
  */
 window.initClientDataTable = function (selector, extra) {
     if (typeof $ === 'undefined') return null;
+    if (extra === undefined) extra = {};
 
     var config = {
         ...commonDefaults,

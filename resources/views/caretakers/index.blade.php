@@ -106,7 +106,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($caretakers as $caretaker)
+                        @foreach ($caretakers as $caretaker)
                             <tr>
                                 <td class="font-medium text-gray-900">{{ $caretaker->name }}</td>
                                 <td class="text-center">
@@ -127,9 +127,7 @@
                                     <a href="{{ route('caretakers.edit', $caretaker) }}" class="text-indigo-600 hover:underline text-xs">Edit</a>
                                 </td>
                             </tr>
-                        @empty
-                            <tr><td colspan="9" class="px-4 py-8 text-center text-gray-400">No caretakers yet.</td></tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>

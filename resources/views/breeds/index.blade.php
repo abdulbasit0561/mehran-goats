@@ -76,7 +76,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($breeds as $breed)
+                            @foreach ($breeds as $breed)
                                 <tr>
                                     <td class="font-medium text-gray-900">{{ $breed->name }}</td>
                                     <td class="text-center">{{ $breed->goats_count }}</td>
@@ -91,9 +91,7 @@
                                         </form>
                                     </td>
                                 </tr>
-                            @empty
-                                <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No breeds yet.</td></tr>
-                            @endforelse
+                            @endforeach
                         </tbody>
                     </table>
                 </div>

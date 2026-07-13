@@ -10,11 +10,10 @@ import './pwa';
 // Offline-first: IndexedDB outbox + form interceptor + sync engine
 import { initOffline } from './offline/index.js';
 
-// DataTables core + extensions
-import dt from 'datatables.net-bs5';
+// DataTables core + extensions (ES module imports auto-initialise)
+import 'datatables.net-bs5';
 import 'datatables.net-responsive-bs5';
 import 'datatables.net-buttons-bs5';
-dt(window, $);
 
 // Custom DataTables initialisation helper
 import './datatables';
