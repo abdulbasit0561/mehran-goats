@@ -132,7 +132,7 @@ class Goat extends Model
         return (int) $this->purchase_date->diffInDays($end);
     }
 
-    /** Current value: estimated_value if in herd, sale_price if sold, 0 if deceased. */
+    /** Current value: estimated_value (or purchase_price fallback) if in herd, sale_price if sold, 0 if deceased. */
     public function getCurrentValueAttribute(): float
     {
         if ($this->status === 'sold') {
@@ -141,7 +141,8 @@ class Goat extends Model
         if ($this->status === 'deceased') {
             return 0;
         }
-        return (float) $this->estimated_value;
+        // Fall back to purchase_price when estimated_value is not set
+        return (float) ($this->estimated_value > 0 ? $this->estimated_value : $this->purchase_price);
     }
 
     /** Scope: goats currently in the herd (not sold, not deceased). */

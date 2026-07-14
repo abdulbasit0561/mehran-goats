@@ -57,7 +57,9 @@ class GoatController extends Controller
         $totalPurchaseCost = (float) Goat::sum('purchase_price');
         $totalSalesRevenue = (float) Goat::where('status', 'sold')->sum('sale_price');
         $realizedProfit    = $totalSalesRevenue - (float) Goat::where('status', 'sold')->sum('purchase_price');
-        $currentHerdValue  = (float) Goat::whereNotIn('status', ['sold', 'deceased'])->sum('estimated_value');
+        $currentHerdValue  = (float) Goat::whereNotIn('status', ['sold', 'deceased'])
+                                ->selectRaw('COALESCE(SUM(CASE WHEN estimated_value > 0 THEN estimated_value ELSE purchase_price END), 0) as total')
+                                ->value('total');
 
         $summary = [
             'purchased_count'   => $purchasedCount,

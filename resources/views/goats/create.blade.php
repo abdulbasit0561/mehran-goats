@@ -115,6 +115,7 @@
                         <!-- Estimated Value -->
                         <div>
                             <x-input-label for="estimated_value" :value="__('Estimated Current Value (PKR)')" />
+                            <p class="text-xs text-gray-400 mb-1">Leave at 0 to use purchase price as the current value automatically.</p>
                             <x-text-input id="estimated_value" name="estimated_value" type="number" step="0.01" min="0" :value="old('estimated_value', 0)" class="mt-1 block w-full" />
                         </div>
 

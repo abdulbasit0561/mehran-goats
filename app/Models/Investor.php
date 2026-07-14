@@ -61,9 +61,11 @@ class Investor extends Model
     /** Share of current herd value based on ownership %. */
     public function getHerdShareAttribute(): float
     {
+        // Use effective value: estimated_value if > 0, otherwise purchase_price
         $totalHerdValue = (float) Goat::where('status', '!=', 'sold')
             ->where('status', '!=', 'deceased')
-            ->sum('estimated_value');
+            ->selectRaw('COALESCE(SUM(CASE WHEN estimated_value > 0 THEN estimated_value ELSE purchase_price END), 0) as total')
+            ->value('total');
         if ($totalHerdValue <= 0) {
             return 0;
         }

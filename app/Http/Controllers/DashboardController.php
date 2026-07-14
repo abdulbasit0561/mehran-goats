@@ -16,7 +16,9 @@ class DashboardController extends Controller
     {
         // --- Financial KPIs (matching the Google Sheet Dashboard) ---
         $totalCapital      = (float) \DB::table('investments')->sum('amount');
-        $currentHerdValue  = (float) Goat::whereNotIn('status', ['sold', 'deceased'])->sum('estimated_value');
+        $currentHerdValue  = (float) Goat::whereNotIn('status', ['sold', 'deceased'])
+                                ->selectRaw('COALESCE(SUM(CASE WHEN estimated_value > 0 THEN estimated_value ELSE purchase_price END), 0) as total')
+                                ->value('total');
         $realizedProfit    = (float) Goat::where('status', 'sold')
                                 ->selectRaw('COALESCE(SUM(sale_price - purchase_price), 0) as total')
                                 ->value('total');
@@ -58,7 +60,7 @@ class DashboardController extends Controller
         // --- Herd composition by breed ---
         $herdComposition = Breed::select('breeds.name as breed')
             ->selectRaw('COUNT(goats.id) as count')
-            ->selectRaw('COALESCE(SUM(goats.estimated_value), 0) as value')
+            ->selectRaw('COALESCE(SUM(CASE WHEN goats.estimated_value > 0 THEN goats.estimated_value ELSE goats.purchase_price END), 0) as value')
             ->leftJoin('goats', function ($join) {
                 $join->on('breeds.id', '=', 'goats.breed_id')
                      ->whereNotIn('goats.status', ['sold', 'deceased']);
