@@ -15,6 +15,12 @@
                 </div>
             @endif
 
+            @if (session('error'))
+                <div class="mb-6 rounded-md bg-red-50 p-4 border border-red-200">
+                    <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                </div>
+            @endif
+
             <!-- Main info card -->
             <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
                 <div class="flex flex-wrap items-start gap-6">
@@ -56,7 +62,15 @@
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase">Status</p>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">{{ ucfirst($goat->status) }}</span>
+                                @php
+                                    $statusColors = [
+                                        'deceased' => 'bg-gray-200 text-gray-700',
+                                        'sold'     => 'bg-blue-100 text-blue-800',
+                                        'breeder'  => 'bg-green-100 text-green-800',
+                                    ];
+                                    $statusCls = $statusColors[$goat->status] ?? 'bg-yellow-100 text-yellow-800';
+                                @endphp
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ $statusCls }}">{{ ucfirst($goat->status) }}</span>
                                 @php $activePreg = $goat->activePregnancy(); @endphp
                                 @if ($activePreg)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800 ml-1">
@@ -104,8 +118,11 @@
                             </div>
                         @endif
 
-                        <div class="mt-4 flex gap-3">
+                        <div class="mt-4 flex flex-wrap gap-3">
                             <a href="{{ route('goats.edit', $goat) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Edit</a>
+                            @if ($goat->status !== 'deceased')
+                                <a href="{{ route('goats.declare-dead', $goat) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">Declare Dead</a>
+                            @endif
                             <form method="POST" action="{{ route('goats.destroy', $goat) }}" onsubmit="return confirm('Delete this goat?')">
                                 @csrf @method('DELETE')
                                 <button class="px-4 py-2 bg-red-50 text-red-700 rounded-md text-sm font-medium hover:bg-red-100">Delete</button>
@@ -115,7 +132,39 @@
                 </div>
             </div>
 
-            <!-- Tabs: Health, Breeding, Ownership -->
+            {{-- Death record (shown only when one exists) --}}
+            @if ($goat->deathRecord)
+                <div class="bg-white shadow-sm rounded-lg p-6 mb-6 border-l-4 border-gray-400">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-900">⚰️ Death Record</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-700">Deceased</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Date of Death</p>
+                            <p class="font-medium text-gray-900">{{ $goat->deathRecord->death_date->format('M d, Y') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Cause</p>
+                            <p class="font-medium text-gray-900">{{ $goat->deathRecord->cause ?? '—' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Disposal Method</p>
+                            <p class="font-medium text-gray-900 capitalize">{{ str_replace('_', ' ', $goat->deathRecord->disposal_method) }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase">Disposal Value</p>
+                            <p class="font-medium text-gray-900">{{ number_format($goat->deathRecord->disposal_value, 2) }}</p>
+                        </div>
+                    </div>
+                    @if ($goat->deathRecord->notes)
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-xs text-gray-500 uppercase mb-1">Notes</p>
+                            <p class="text-sm text-gray-700">{{ $goat->deathRecord->notes }}</p>
+                        </div>
+                    @endif
+                </div>
+            @endif
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 <!-- Health records -->

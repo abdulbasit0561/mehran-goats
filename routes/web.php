@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
     // Goats (full resource)
     Route::delete('/goats/bulk', [GoatController::class, 'bulkDestroy'])->name('goats.bulk-destroy');
     Route::get('/goats/data', [GoatController::class, 'data'])->name('goats.data');
+    Route::get('/goats/{goat}/declare-dead', [GoatController::class, 'declareDead'])->name('goats.declare-dead');
+    Route::post('/goats/{goat}/declare-dead', [GoatController::class, 'storeDeath'])->name('goats.store-death');
     Route::resource('goats', GoatController::class);
 
     // Caretakers (every Nth kid share)

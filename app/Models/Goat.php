@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Goat extends Model
@@ -51,6 +52,12 @@ class Goat extends Model
     public function ownershipUnits(): HasMany
     {
         return $this->hasMany(OwnershipUnit::class);
+    }
+
+    /** The death record for this goat (one-to-one; a goat can only die once). */
+    public function deathRecord(): HasOne
+    {
+        return $this->hasOne(DeathRecord::class);
     }
 
     /** As sire (male parent) */

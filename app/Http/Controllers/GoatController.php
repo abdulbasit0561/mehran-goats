@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Breed;
 use App\Models\BreedingRecord;
 use App\Models\Caretaker;
+use App\Models\DeathRecord;
 use App\Models\Goat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\DataTables;
 
@@ -191,7 +193,7 @@ class GoatController extends Controller
 
     public function show(Goat $goat)
     {
-        $goat->load(['breed', 'caretaker', 'sire.breed', 'dam.breed', 'healthRecords', 'siredRecords.dam', 'birthedRecords.sire', 'birthedRecords.kids', 'ownershipUnits.investor']);
+        $goat->load(['breed', 'caretaker', 'sire.breed', 'dam.breed', 'healthRecords', 'siredRecords.dam', 'birthedRecords.sire', 'birthedRecords.kids', 'ownershipUnits.investor', 'deathRecord']);
 
         return view('goats.show', compact('goat'));
     }
@@ -239,6 +241,57 @@ class GoatController extends Controller
         return redirect()
             ->route('goats.show', $goat)
             ->with('success', "Goat {$goat->tag_id} updated successfully.");
+    }
+
+    //---------------------------------------------------------------------
+    // DECLARE DEAD — record a death and set status to 'deceased'
+    //---------------------------------------------------------------------
+
+    /** Show the death declaration form for a goat. */
+    public function declareDead(Goat $goat)
+    {
+        if ($goat->status === 'deceased') {
+            return redirect()
+                ->route('goats.show', $goat)
+                ->with('error', "{$goat->tag_id} has already been declared dead.");
+        }
+
+        return view('goats.declare-dead', compact('goat'));
+    }
+
+    /** Validate + store the death record and set the goat's status to deceased. */
+    public function storeDeath(Request $request, Goat $goat)
+    {
+        if ($goat->status === 'deceased') {
+            return redirect()
+                ->route('goats.show', $goat)
+                ->with('error', "{$goat->tag_id} has already been declared dead.");
+        }
+
+        $validated = $request->validate([
+            'death_date'      => ['required', 'date', 'before_or_equal:today'],
+            'cause'           => ['nullable', 'string', 'max:255'],
+            'disposal_method' => ['required', 'in:sold_to_butcher,buried,composted,other'],
+            'disposal_value'  => ['nullable', 'numeric', 'min:0'],
+            'notes'           => ['nullable', 'string'],
+        ]);
+
+        DB::transaction(function () use ($goat, $validated) {
+            DeathRecord::create([
+                'goat_id'         => $goat->id,
+                'death_date'      => $validated['death_date'],
+                'cause'           => $validated['cause'] ?? null,
+                'disposal_method' => $validated['disposal_method'],
+                'disposal_value'  => $validated['disposal_value'] ?? 0,
+                'notes'           => $validated['notes'] ?? null,
+            ]);
+
+            $goat->update(['status' => 'deceased']);
+        });
+
+        return redirect()
+            ->route('goats.show', $goat)
+            ->with('success', "{$goat->tag_id} marked as deceased. Death record saved.");
     }
 
     public function destroy(Goat $goat)
