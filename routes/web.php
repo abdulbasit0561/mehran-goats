@@ -8,6 +8,7 @@ use App\Http\Controllers\BudgetEntryController;
 use App\Http\Controllers\CaretakerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GoatController;
+use App\Http\Controllers\GoatImageController;
 use App\Http\Controllers\HealthRecordController;
 use App\Http\Controllers\InstructionsController;
 use App\Http\Controllers\InvestmentController;
@@ -41,6 +42,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/goats/{goat}/declare-dead', [GoatController::class, 'declareDead'])->name('goats.declare-dead');
     Route::post('/goats/{goat}/declare-dead', [GoatController::class, 'storeDeath'])->name('goats.store-death');
     Route::resource('goats', GoatController::class);
+
+    // Gallery images (nested under goats, shallow destroy)
+    Route::post('/goats/{goat}/images', [GoatImageController::class, 'store'])->name('goats.images.store');
+    Route::delete('/goats/images/{goat_image}', [GoatImageController::class, 'destroy'])->name('goats.images.destroy');
 
     // Caretakers (every Nth kid share)
     Route::resource('caretakers', CaretakerController::class);

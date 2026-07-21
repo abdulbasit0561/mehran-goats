@@ -7,6 +7,7 @@ use App\Models\BreedingRecord;
 use App\Models\Caretaker;
 use App\Models\DeathRecord;
 use App\Models\Goat;
+use App\Models\GoatImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -184,7 +185,12 @@ class GoatController extends Controller
             $validated['photo'] = $request->file('photo')->store('goats', 'public');
         }
 
-        Goat::create($validated);
+        $goat = Goat::create($validated);
+
+        // Sync profile photo into the gallery
+        if ($goat->photo) {
+            $this->syncPhotoToGallery($goat);
+        }
 
         return redirect()
             ->route('goats.index')
@@ -193,7 +199,7 @@ class GoatController extends Controller
 
     public function show(Goat $goat)
     {
-        $goat->load(['breed', 'caretaker', 'sire.breed', 'dam.breed', 'healthRecords', 'siredRecords.dam', 'birthedRecords.sire', 'birthedRecords.kids', 'ownershipUnits.investor', 'deathRecord']);
+        $goat->load(['breed', 'caretaker', 'sire.breed', 'dam.breed', 'healthRecords', 'siredRecords.dam', 'birthedRecords.sire', 'birthedRecords.kids', 'ownershipUnits.investor', 'deathRecord', 'images']);
 
         return view('goats.show', compact('goat'));
     }
@@ -237,6 +243,11 @@ class GoatController extends Controller
         }
 
         $goat->update($validated);
+
+        // Sync new profile photo into the gallery
+        if (isset($validated['photo'])) {
+            $this->syncPhotoToGallery($goat);
+        }
 
         return redirect()
             ->route('goats.show', $goat)
@@ -316,5 +327,25 @@ class GoatController extends Controller
         return redirect()
             ->route('goats.index')
             ->with('success', "{$count} goat(s) deleted.");
+    }
+
+    //---------------------------------------------------------------------
+    // HELPERS
+    //---------------------------------------------------------------------
+
+    /**
+     * Create a gallery entry for the goat's current profile photo.
+     * Captures current weight and age context for the gallery timeline.
+     */
+    private function syncPhotoToGallery(Goat $goat): void
+    {
+        GoatImage::create([
+            'goat_id'     => $goat->id,
+            'image_path'  => $goat->photo,
+            'age_months'  => $goat->age_in_months ?? 0,
+            'weight_kg'   => $goat->weight_kg ?? 0,
+            'taken_at'    => now()->toDateString(),
+            'notes'       => 'Profile photo',
+        ]);
     }
 }

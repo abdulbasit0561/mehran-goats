@@ -101,9 +101,43 @@
                             <x-input-label for="sale_weight" :value="__('Sale Weight (kg)')" />
                             <x-text-input id="sale_weight" name="sale_weight" type="number" step="0.01" min="0" :value="old('sale_weight', $goat->sale_weight)" class="mt-1 block w-full" />
                         </div>
-                        <div>
-                            <x-input-label for="photo" :value="__('Photo (replace)')" />
-                            <input id="photo" name="photo" type="file" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700" />
+                        <!-- Photo (Upload / Capture / Replace) -->
+                        <div class="md:col-span-2">
+                            <x-input-label for="photo" :value="__('Profile Photo (replace)')" />
+
+                            @if ($goat->photo)
+                                <div class="mt-1 flex items-center gap-3">
+                                    <img src="{{ Storage::url($goat->photo) }}" alt="Current" class="w-16 h-16 rounded-lg object-cover" />
+                                    <span class="text-xs text-gray-400">Current photo</span>
+                                </div>
+                            @endif
+
+                            <!-- Mode toggle -->
+                            <div class="mt-2 flex gap-2">
+                                <button type="button" onclick="document.getElementById('photo').classList.remove('hidden'); document.getElementById('photo-capture-wrap').classList.add('hidden'); this.classList.add('bg-indigo-600','text-white'); this.classList.remove('bg-indigo-50','text-indigo-700'); document.getElementById('btn-capture-photo').classList.add('bg-indigo-50','text-indigo-700'); document.getElementById('btn-capture-photo').classList.remove('bg-indigo-600','text-white');"
+                                    id="btn-upload-photo" class="px-3 py-1.5 rounded text-xs font-medium bg-indigo-600 text-white">
+                                    📁 Upload
+                                </button>
+                                <button type="button" onclick="document.getElementById('photo').classList.add('hidden'); document.getElementById('photo-capture-wrap').classList.remove('hidden'); this.classList.add('bg-indigo-600','text-white'); this.classList.remove('bg-indigo-50','text-indigo-700'); document.getElementById('btn-upload-photo').classList.add('bg-indigo-50','text-indigo-700'); document.getElementById('btn-upload-photo').classList.remove('bg-indigo-600','text-white');"
+                                    id="btn-capture-photo" class="px-3 py-1.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700">
+                                    📷 Capture
+                                </button>
+                            </div>
+
+                            <!-- Single file input shared by upload + capture modes -->
+                            <input id="photo" name="photo" type="file" accept="image/*" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+
+                            <!-- Capture mode: camera button + preview -->
+                            <div id="photo-capture-wrap" class="hidden mt-2">
+                                <div class="flex items-center gap-3">
+                                    <button type="button" onclick="openCamera('photo', 'photo-preview')"
+                                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                                        📷 Open Camera
+                                    </button>
+                                    <img id="photo-preview" src="" alt="" class="hidden w-20 h-20 rounded-lg object-cover" />
+                                </div>
+                                <p class="mt-1 text-xs text-gray-400">Your browser will ask permission to access the camera.</p>
+                            </div>
                         </div>
                     </div>
                     <div class="mt-6">
@@ -117,4 +151,6 @@
             </div>
         </div>
     </div>
+
+    @include('goats.partials._camera-capture')
 </x-app-layout>

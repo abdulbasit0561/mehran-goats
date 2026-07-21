@@ -44,6 +44,12 @@ class Goat extends Model
         return $this->belongsTo(Caretaker::class);
     }
 
+    /** Gallery images for this goat (newest first). */
+    public function images(): HasMany
+    {
+        return $this->hasMany(GoatImage::class)->orderByDesc('taken_at');
+    }
+
     public function healthRecords(): HasMany
     {
         return $this->hasMany(HealthRecord::class)->orderByDesc('date');

@@ -165,6 +165,115 @@
                     @endif
                 </div>
             @endif
+
+            {{-- ============================= --}}
+            {{--       IMAGE GALLERY          --}}
+            {{-- ============================= --}}
+            <div class="bg-white shadow-sm rounded-lg p-4 sm:p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold text-gray-900">📸 Photo Gallery <span class="text-sm font-normal text-gray-400">({{ $goat->images->count() }})</span></h3>
+                </div>
+
+                {{-- Gallery grid --}}
+                @if ($goat->images->isNotEmpty())
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
+                        @foreach ($goat->images as $img)
+                            <div class="group relative">
+                                <button type="button"
+                                    onclick="openLightbox('{{ Storage::url($img->image_path) }}', {{ json_encode($img->age_months) }}, {{ json_encode($img->weight_kg) }}, '{{ $img->taken_at->format('M d, Y') }}', {{ json_encode($img->notes ?? '') }})"
+                                    class="block w-full">
+                                    <img src="{{ Storage::url($img->image_path) }}" alt="Goat photo" class="w-full aspect-square object-cover rounded-lg hover:opacity-80 transition" />
+                                </button>
+                                {{-- Metadata badge --}}
+                                <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 rounded-b-lg truncate">
+                                    {{ $img->taken_at->format('M d') }} · {{ $img->age_months }}mo · {{ $img->weight_kg }}kg
+                                </div>
+                                {{-- Delete button --}}
+                                <form method="POST" action="{{ route('goats.images.destroy', $img) }}" onsubmit="return confirm('Delete this photo?')" class="absolute top-1 right-1">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="bg-red-600/80 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600" title="Delete">&times;</button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-sm text-gray-400 mb-4">No photos yet. Upload or capture a photo below.</p>
+                @endif
+
+                {{-- Upload form --}}
+                <form method="POST" action="{{ route('goats.images.store', $goat) }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="border-t border-gray-100 pt-4">
+                        <p class="text-sm font-medium text-gray-700 mb-3">Add Photo to Gallery</p>
+
+                        @if ($errors->any())
+                            <div class="mb-4 rounded-md bg-red-50 p-4 border border-red-200">
+                                <ul class="text-sm text-red-700 list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        {{-- Mode toggle --}}
+                        <div class="flex gap-2 mb-3">
+                            <button type="button" onclick="document.getElementById('gallery-image').classList.remove('hidden'); document.getElementById('gallery-capture-wrap').classList.add('hidden'); this.classList.add('bg-indigo-600','text-white'); this.classList.remove('bg-indigo-50','text-indigo-700'); document.getElementById('btn-gallery-capture').classList.add('bg-indigo-50','text-indigo-700'); document.getElementById('btn-gallery-capture').classList.remove('bg-indigo-600','text-white');"
+                                id="btn-gallery-upload" class="px-3 py-1.5 rounded text-xs font-medium bg-indigo-600 text-white">
+                                📁 Upload Image
+                            </button>
+                            <button type="button" onclick="document.getElementById('gallery-image').classList.add('hidden'); document.getElementById('gallery-capture-wrap').classList.remove('hidden'); this.classList.add('bg-indigo-600','text-white'); this.classList.remove('bg-indigo-50','text-indigo-700'); document.getElementById('btn-gallery-upload').classList.add('bg-indigo-50','text-indigo-700'); document.getElementById('btn-gallery-upload').classList.remove('bg-indigo-600','text-white');"
+                                id="btn-gallery-capture" class="px-3 py-1.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700">
+                                📷 Capture via Camera
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {{-- Left: image selection --}}
+                            <div>
+                                {{-- Single file input shared by upload + capture modes --}}
+                                <input id="gallery-image" name="image" type="file" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+
+                                {{-- Capture mode: camera button + preview (hidden by default) --}}
+                                <div id="gallery-capture-wrap" class="hidden mt-2">
+                                    <div class="flex items-center gap-3">
+                                        <button type="button" onclick="openCamera('gallery-image', 'gallery-capture-preview')"
+                                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                                            📷 Open Camera
+                                        </button>
+                                        <img id="gallery-capture-preview" src="" alt="" class="hidden w-20 h-20 rounded-lg object-cover" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Right: required metadata --}}
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Age (months) *</label>
+                                    <input name="age_months" type="number" step="0.1" min="0" required value="{{ old('age_months', $goat->age_in_months ?? 0) }}" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Weight (kg) *</label>
+                                    <input name="weight_kg" type="number" step="0.01" min="0" required value="{{ old('weight_kg', $goat->weight_kg ?? 0) }}" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Date *</label>
+                                    <input name="taken_at" type="date" required value="{{ old('taken_at', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Notes</label>
+                                    <input name="notes" type="text" maxlength="1000" value="{{ old('notes') }}" placeholder="Optional" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex justify-end">
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Add Photo</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {{-- ====== END IMAGE GALLERY ====== --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 <!-- Health records -->
@@ -316,4 +425,72 @@
             </div>
         </div>
     </div>
+
+    {{-- ============================= --}}
+    {{--     LIGHTBOX PHOTO VIEWER    --}}
+    {{-- ============================= --}}
+    <div id="lightbox" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4" onclick="closeLightbox(event)">
+        <div class="relative max-w-3xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+                <h3 class="font-semibold text-gray-900">📸 Photo Details</h3>
+                <button type="button" onclick="closeLightbox()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <div class="max-h-[55vh] overflow-hidden bg-gray-100 flex items-center justify-center">
+                <img id="lightbox-img" src="" alt="Goat photo" class="max-h-[55vh] w-full object-contain" />
+            </div>
+            <div class="px-5 py-4">
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase">Age</p>
+                        <p id="lightbox-age" class="text-lg font-semibold text-gray-900">—</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase">Weight</p>
+                        <p id="lightbox-weight" class="text-lg font-semibold text-gray-900">—</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase">Date</p>
+                        <p id="lightbox-date" class="text-lg font-semibold text-gray-900">—</p>
+                    </div>
+                </div>
+                <div id="lightbox-notes-wrap" class="hidden mt-3 pt-3 border-t border-gray-100">
+                    <p class="text-xs text-gray-400 uppercase mb-1">Notes</p>
+                    <p id="lightbox-notes" class="text-sm text-gray-700"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Camera capture modal --}}
+    @include('goats.partials._camera-capture')
+
+    {{-- Lightbox JS --}}
+    @push('scripts')
+        <script>
+            function openLightbox(src, age, weight, date, notes) {
+                document.getElementById('lightbox-img').src = src;
+                document.getElementById('lightbox-age').textContent = age ? age + ' months' : '—';
+                document.getElementById('lightbox-weight').textContent = weight ? weight + ' kg' : '—';
+                document.getElementById('lightbox-date').textContent = date || '—';
+                if (notes) {
+                    document.getElementById('lightbox-notes').textContent = notes;
+                    document.getElementById('lightbox-notes-wrap').classList.remove('hidden');
+                } else {
+                    document.getElementById('lightbox-notes-wrap').classList.add('hidden');
+                }
+                document.getElementById('lightbox').classList.remove('hidden');
+            }
+
+            function closeLightbox(event) {
+                if (event && event.target !== document.getElementById('lightbox')) return;
+                document.getElementById('lightbox').classList.add('hidden');
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                }
+            });
+        </script>
+    @endpush
 </x-app-layout>

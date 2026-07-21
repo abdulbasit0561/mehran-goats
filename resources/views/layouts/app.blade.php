@@ -305,5 +305,7 @@
             </div>
         </div>
         </div>{{-- /mobile-only --}}
+
+        @stack('scripts')
     </body>
 </html>
