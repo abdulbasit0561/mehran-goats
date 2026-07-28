@@ -141,29 +141,29 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
                     <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-blue-500">
                         <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Total Capital</p>
-                        <p class="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-gray-900">PKR {{ number_format($kpis['total_capital'], 0) }}</p>
+                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['total_capital'], 0) }}</p>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-green-500">
                         <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Herd Value</p>
-                        <p class="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-gray-900">PKR {{ number_format($kpis['current_herd_value'], 0) }}</p>
+                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['current_herd_value'], 0) }}</p>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-teal-500">
                         <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Realized Profit</p>
-                        <p class="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-gray-900">PKR {{ number_format($kpis['realized_profit'], 0) }}</p>
+                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['realized_profit'], 0) }}</p>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-red-500">
                         <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Total Expenses</p>
-                        <p class="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold text-gray-900">PKR {{ number_format($kpis['total_expenses'], 0) }}</p>
+                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['total_expenses'], 0) }}</p>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 {{ $kpis['net_profit'] >= 0 ? 'border-green-600' : 'border-red-600' }}">
                         <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Net Profit</p>
-                        <p class="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold {{ $kpis['net_profit'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold whitespace-nowrap {{ $kpis['net_profit'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
                             PKR {{ number_format($kpis['net_profit'], 0) }}
                         </p>
                     </div>
                     <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 {{ $kpis['return_pct'] >= 0 ? 'border-amber-500' : 'border-red-600' }}">
                         <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Return %</p>
-                        <p class="mt-1 sm:mt-2 text-lg sm:text-2xl font-bold {{ $kpis['return_pct'] >= 0 ? 'text-amber-600' : 'text-red-600' }}">
+                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold whitespace-nowrap {{ $kpis['return_pct'] >= 0 ? 'text-amber-600' : 'text-red-600' }}">
                             {{ $kpis['return_pct'] >= 0 ? '+' : '' }}{{ number_format($kpis['return_pct'], 1) }}%
                         </p>
                     </div>
@@ -187,11 +187,11 @@
                     </div>
                     <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4">
                         <p class="text-[10px] sm:text-xs text-gray-500">Income (This Month)</p>
-                        <p class="text-lg sm:text-xl font-bold text-green-600">+{{ number_format($kpis['income_this_month'], 0) }}</p>
+                        <p class="text-base sm:text-xl font-bold text-green-600 whitespace-nowrap">+{{ number_format($kpis['income_this_month'], 0) }}</p>
                     </div>
                     <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4">
                         <p class="text-[10px] sm:text-xs text-gray-500">Expenses (This Month)</p>
-                        <p class="text-lg sm:text-xl font-bold text-red-600">-{{ number_format($kpis['expense_this_month'], 0) }}</p>
+                        <p class="text-base sm:text-xl font-bold text-red-600 whitespace-nowrap">-{{ number_format($kpis['expense_this_month'], 0) }}</p>
                     </div>
                 </div>
 
