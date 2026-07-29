@@ -30,3 +30,9 @@ Thumbs.db
 /.drytis/
 /.playwright-mcp/
 /*.png
+
+# Stray screenshots / temp captures
+/*.jpeg
+/*.jpg
+/userDocs/*.png
+/userDocs/*.jpeg
