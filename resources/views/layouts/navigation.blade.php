@@ -78,6 +78,11 @@
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>
+
+                    {{-- Website CMS --}}
+                    <x-nav-link :href="route('cms.index')" :active="request()->routeIs('cms.*')">
+                        {{ __('Website') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -178,6 +183,9 @@
 
             <div class="border-t border-gray-200 my-2"></div>
 
+            <x-responsive-nav-link :href="route('cms.index')" :active="request()->routeIs('cms.*')">
+                {{ __('Website') }}
+            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('instructions')" :active="request()->routeIs('instructions')">
                 {{ __('Instructions') }}
             </x-responsive-nav-link>

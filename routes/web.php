@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BreedController;
 use App\Http\Controllers\BreedingController;
+use App\Http\Controllers\CmsController;
 use App\Http\Controllers\BreedingRecordController;
 use App\Http\Controllers\BudgetEntryController;
 use App\Http\Controllers\CaretakerController;
@@ -24,7 +25,13 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
-    return view('landing');
+    $settings = \App\Models\SiteSetting::allAsArray();
+    $services = \App\Models\SiteService::active()->ordered()->get();
+    $breeds = \App\Models\Breed::where('description', '!=', 'test')
+        ->orWhereNull('description')
+        ->orderBy('name')
+        ->get(['id', 'name', 'description']);
+    return view('landing', compact('breeds', 'settings', 'services'));
 })->name('landing');
 
 Route::middleware('auth')->group(function () {
@@ -115,6 +122,18 @@ Route::middleware('auth')->group(function () {
 
     // Instructions
     Route::get('/instructions', [InstructionsController::class, 'index'])->name('instructions');
+
+    // CMS — Landing Page Content Management
+    Route::get('/cms', [CmsController::class, 'index'])->name('cms.index');
+    Route::post('/cms/branding', [CmsController::class, 'updateBranding'])->name('cms.update-branding');
+    Route::post('/cms/general', [CmsController::class, 'updateGeneral'])->name('cms.update-general');
+    Route::post('/cms/seo', [CmsController::class, 'updateSeo'])->name('cms.update-seo');
+    Route::get('/cms/services/create', [CmsController::class, 'servicesCreate'])->name('cms.services.create');
+    Route::post('/cms/services', [CmsController::class, 'servicesStore'])->name('cms.services.store');
+    Route::get('/cms/services/{service}/edit', [CmsController::class, 'servicesEdit'])->name('cms.services.edit');
+    Route::put('/cms/services/{service}', [CmsController::class, 'servicesUpdate'])->name('cms.services.update');
+    Route::delete('/cms/services/{service}', [CmsController::class, 'servicesDestroy'])->name('cms.services.destroy');
+    Route::post('/cms/services/{service}/toggle', [CmsController::class, 'servicesToggle'])->name('cms.services.toggle');
 
     // Offline-First Sync (JSON API, session-based auth)
     Route::get('/api/sync/pull', [SyncController::class, 'pull'])->name('sync.pull');
