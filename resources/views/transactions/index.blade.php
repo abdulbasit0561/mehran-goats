@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">💸 Expenses & Income</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">💸 Expenses &amp; Income</h2>
             <a href="{{ route('transactions.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">+ Add Transaction</a>
         </div>
     </x-slot>
@@ -22,7 +22,7 @@
                     <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['total'], 0) }}</p>
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-amber-500">
-                    <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Feed & Fodder</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Feed &amp; Fodder</p>
                     <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['feed'], 0) }}</p>
                 </div>
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-teal-500">
@@ -36,12 +36,50 @@
             </div>
 
             {{-- ============================================================= --}}
+            {{-- BULK ACTION BAR (hidden until items are selected)            --}}
+            {{-- ============================================================= --}}
+            <div id="bulkActionBar" class="hidden mb-4 rounded-xl bg-indigo-50 border border-indigo-200 p-3 sm:p-4 flex flex-wrap items-center gap-3">
+                <span class="text-sm font-semibold text-indigo-800">
+                    <span id="bulkCount">0</span> selected
+                </span>
+
+                {{-- Bulk Assign Investor --}}
+                <form method="POST" action="{{ route('transactions.bulk-assign') }}" class="inline-flex items-center gap-2" id="bulkAssignForm">
+                    @csrf @method('PATCH')
+                    <div id="bulkAssignIdsContainer" style="display:contents;"></div>
+                    <select name="investor_id" id="bulkInvestorSelect" class="rounded-md border-gray-300 text-sm py-1.5 pr-8" required>
+                        <option value="">Assign investor…</option>
+                        @foreach ($investors as $inv)
+                            <option value="{{ $inv->id }}">{{ $inv->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                        Assign
+                    </button>
+                </form>
+
+                {{-- Bulk Delete --}}
+                <form method="POST" action="{{ route('transactions.bulk-destroy') }}" class="inline-flex items-center gap-2" id="bulkDeleteForm" onsubmit="return confirm('Delete the selected transactions? This cannot be undone.')">
+                    @csrf @method('DELETE')
+                    <div id="bulkDeleteIdsContainer" style="display:contents;"></div>
+                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
+                        🗑 Delete Selected
+                    </button>
+                </form>
+
+                <button type="button" id="bulkClearBtn" class="ml-auto text-sm text-gray-500 hover:text-gray-700 font-medium">
+                    Clear selection
+                </button>
+            </div>
+
+            {{-- ============================================================= --}}
             {{-- DESKTOP TABLE (hidden on mobile)                              --}}
             {{-- ============================================================= --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 desktop-only-table">
                 <table id="transactions-table" class="w-full text-sm display">
                     <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
                         <tr>
+                            <th><input type="checkbox" id="txnSelectAll" class="cursor-pointer" style="accent-color: #4f46e5;"></th>
                             <th>Date</th>
                             <th>Type</th>
                             <th>Category</th>
@@ -67,6 +105,7 @@
                     <div class="mobile-card-item">
                         <div class="mobile-card-row mb-1">
                             <div class="flex items-center gap-2 min-w-0">
+                                <input type="checkbox" class="txn-mobile-check cursor-pointer shrink-0" value="{{ $t->id }}" style="accent-color: #4f46e5;">
                                 <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium shrink-0
                                     {{ $t->type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                     {{ $t->type === 'income' ? '↗' : '↘' }}
@@ -114,11 +153,103 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // ---- Selection tracking (shared across desktop + mobile) ----
+            const selectedIds = new Set();
+            const bulkActionBar = document.getElementById('bulkActionBar');
+            const bulkCountEl = document.getElementById('bulkCount');
+            const assignIdsContainer = document.getElementById('bulkAssignIdsContainer');
+            const deleteIdsContainer = document.getElementById('bulkDeleteIdsContainer');
+
+            // Populate hidden inputs as ids[] so PHP receives a proper array
+            function populateIdsInputs() {
+                [assignIdsContainer, deleteIdsContainer].forEach(function (container) {
+                    container.innerHTML = '';
+                    selectedIds.forEach(function (id) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        container.appendChild(input);
+                    });
+                });
+            }
+
+            function updateBulkBar() {
+                const count = selectedIds.size;
+                bulkCountEl.textContent = count;
+                if (count > 0) {
+                    bulkActionBar.classList.remove('hidden');
+                    populateIdsInputs();
+                } else {
+                    bulkActionBar.classList.add('hidden');
+                }
+            }
+
+            // ---- Desktop: DataTables row checkboxes ----
+            const tableEl = document.getElementById('transactions-table');
+            const selectAll = document.getElementById('txnSelectAll');
+
+            // Re-sync checkbox states after every DataTables redraw (pagination, search, sort)
+            function syncDesktopCheckboxes() {
+                tableEl.querySelectorAll('.txn-row-check').forEach(function (cb) {
+                    cb.checked = selectedIds.has(parseInt(cb.value));
+                    cb.addEventListener('change', function () {
+                        const id = parseInt(this.value);
+                        if (this.checked) {
+                            selectedIds.add(id);
+                        } else {
+                            selectedIds.delete(id);
+                        }
+                        updateBulkBar();
+                    });
+                });
+            }
+
+            // Select-all checkbox: selects/deselects all visible rows
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    tableEl.querySelectorAll('.txn-row-check').forEach(function (cb) {
+                        const id = parseInt(cb.value);
+                        cb.checked = selectAll.checked;
+                        if (selectAll.checked) {
+                            selectedIds.add(id);
+                        } else {
+                            selectedIds.delete(id);
+                        }
+                    });
+                    updateBulkBar();
+                });
+            }
+
+            // ---- Mobile checkboxes ----
+            document.querySelectorAll('.txn-mobile-check').forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    const id = parseInt(this.value);
+                    if (this.checked) {
+                        selectedIds.add(id);
+                    } else {
+                        selectedIds.delete(id);
+                    }
+                    updateBulkBar();
+                });
+            });
+
+            // ---- Clear selection button ----
+            document.getElementById('bulkClearBtn').addEventListener('click', function () {
+                selectedIds.clear();
+                document.querySelectorAll('.txn-row-check, .txn-mobile-check, #txnSelectAll').forEach(function (cb) {
+                    cb.checked = false;
+                });
+                updateBulkBar();
+            });
+
+            // ---- Initialise DataTable ----
             if (typeof window.initServerDataTable === 'undefined') return;
 
-            window.initServerDataTable('#transactions-table', '{{ route('transactions.data') }}', {
-                order: [[0, 'desc']],
+            const table = window.initServerDataTable('#transactions-table', '{{ route('transactions.data') }}', {
+                order: [[1, 'desc']],
                 columns: [
+                    { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false },
                     { data: 'date', name: 'date' },
                     { data: 'type', name: 'type' },
                     { data: 'category', name: 'category' },
@@ -159,6 +290,9 @@
                         ],
                     },
                 ],
+                drawCallback: function () {
+                    syncDesktopCheckboxes();
+                },
             });
         });
     </script>

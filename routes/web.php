@@ -108,6 +108,8 @@ Route::middleware('auth')->group(function () {
 
     // Transactions (full resource)
     Route::get('/transactions/data', [TransactionController::class, 'data'])->name('transactions.data');
+    Route::delete('/transactions/bulk', [TransactionController::class, 'bulkDestroy'])->name('transactions.bulk-destroy');
+    Route::patch('/transactions/bulk', [TransactionController::class, 'bulkAssignInvestor'])->name('transactions.bulk-assign');
     Route::resource('transactions', TransactionController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 

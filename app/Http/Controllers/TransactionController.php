@@ -89,6 +89,7 @@ class TransactionController extends Controller
                     $query->where('date', '<=', $request->get('to'));
                 }
             })
+            ->addColumn('checkbox', fn (Transaction $t) => '<input type="checkbox" class="txn-row-check cursor-pointer" value="' . $t->id . '" style="accent-color: #4f46e5;">')
             ->editColumn('date', fn (Transaction $t) => $t->date->format('M d, Y'))
             ->editColumn('type', function (Transaction $t) {
                 $cls = $t->type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
@@ -121,7 +122,7 @@ class TransactionController extends Controller
                     . csrf_field() . method_field('DELETE')
                     . '<button class="text-red-600 hover:underline text-xs">Delete</button></form>';
             })
-            ->rawColumns(['type', 'notes', 'payment_method', 'is_recurring', 'amount', 'variance', 'actions'])
+            ->rawColumns(['checkbox', 'type', 'notes', 'payment_method', 'is_recurring', 'amount', 'variance', 'actions'])
             ->make(true);
     }
 
@@ -208,5 +209,42 @@ class TransactionController extends Controller
         return redirect()
             ->route('transactions.index')
             ->with('success', 'Transaction deleted.');
+    }
+
+    /**
+     * Bulk-delete selected transactions.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'integer', 'exists:transactions,id'],
+        ]);
+
+        $count = Transaction::destroy($validated['ids']);
+
+        return redirect()
+            ->route('transactions.index')
+            ->with('success', "{$count} transaction(s) deleted.");
+    }
+
+    /**
+     * Bulk-assign an investor (Paid By) to selected transactions.
+     */
+    public function bulkAssignInvestor(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'         => ['required', 'array', 'min:1'],
+            'ids.*'       => ['required', 'integer', 'exists:transactions,id'],
+            'investor_id' => ['required', 'exists:investors,id'],
+        ]);
+
+        $count = Transaction::whereIn('id', $validated['ids'])->update(['investor_id' => $validated['investor_id']]);
+
+        $investor = Investor::find($validated['investor_id']);
+
+        return redirect()
+            ->route('transactions.index')
+            ->with('success', "{$count} transaction(s) assigned to {$investor->name}.");
     }
 }
