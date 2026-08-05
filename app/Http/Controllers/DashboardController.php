@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Breed;
+use App\Models\BreedingRecord;
 use App\Models\Goat;
 use App\Models\Investor;
 use App\Models\ProfitDistribution;
@@ -101,8 +102,84 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
+        // --- Chart data ---
+        $chartData = $this->buildChartData($kpis, $expenseByCategory, $herdComposition);
+
         return view('dashboard', compact(
-            'kpis', 'investors', 'expenseByCategory', 'herdComposition', 'recentTransactions'
+            'kpis', 'investors', 'expenseByCategory', 'herdComposition', 'recentTransactions', 'chartData'
         ));
+    }
+
+    /**
+     * Build all data needed for the Charts tab dashboard.
+     */
+    private function buildChartData(array $kpis, $expenseByCategory, $herdComposition): array
+    {
+        // 1. Monthly income vs expense (last 6 months)
+        $months = [];
+        $incomeByMonth = [];
+        $expenseByMonth = [];
+        $netProfitByMonth = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $key = $date->format('M Y');
+            $start = $date->copy()->startOfMonth();
+            $end = $date->copy()->endOfMonth();
+
+            $inc = (float) Transaction::income()->whereBetween('date', [$start, $end])->sum('amount');
+            $exp = (float) Transaction::expense()->whereBetween('date', [$start, $end])->sum('amount');
+
+            $months[] = $key;
+            $incomeByMonth[] = $inc;
+            $expenseByMonth[] = $exp;
+            $netProfitByMonth[] = $inc - $exp;
+        }
+
+        // 2. Expense breakdown by category (reuse existing data)
+        $expenseCategories = $expenseByCategory->map(fn ($c) => $c->category)->values()->all();
+        $expenseAmounts = $expenseByCategory->map(fn ($c) => round($c->total))->values()->all();
+
+        // 3. Herd composition by breed (reuse existing data)
+        $breedNames = $herdComposition->map(fn ($b) => $b->breed)->values()->all();
+        $breedCounts = $herdComposition->map(fn ($b) => $b->count)->values()->all();
+
+        // 4. Goat status distribution — "In Herd" = all statuses except sold/deceased
+        $goatStatus = [
+            'in_herd'  => Goat::whereNotIn('status', ['sold', 'deceased'])->count(),
+            'sold'     => Goat::where('status', 'sold')->count(),
+            'deceased' => Goat::where('status', 'deceased')->count(),
+        ];
+
+        // 5. Investor capital distribution
+        $investorNames = Investor::orderBy('name')->pluck('name')->all();
+        $investorCapital = Investor::with('investments')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($inv) => round($inv->total_capital))
+            ->values()
+            ->all();
+
+        // 6. Breeding/pregnancy status
+        $breedingStatus = [
+            'bred'     => BreedingRecord::where('pregnancy_status', 'bred')->count(),
+            'pregnant' => BreedingRecord::where('pregnancy_status', 'pregnant')->count(),
+            'open'     => BreedingRecord::where('pregnancy_status', 'open')->count(),
+            'kidded'   => BreedingRecord::where('pregnancy_status', 'kidded')->count(),
+        ];
+
+        return [
+            'monthly_labels'     => $months,
+            'monthly_income'     => $incomeByMonth,
+            'monthly_expense'    => $expenseByMonth,
+            'monthly_net_profit' => $netProfitByMonth,
+            'expense_categories' => $expenseCategories,
+            'expense_amounts'    => $expenseAmounts,
+            'breed_names'        => $breedNames,
+            'breed_counts'       => $breedCounts,
+            'goat_status'        => $goatStatus,
+            'investor_names'     => $investorNames,
+            'investor_capital'   => $investorCapital,
+            'breeding_status'    => $breedingStatus,
+        ];
     }
 }

@@ -5,15 +5,52 @@
         </h2>
     </x-slot>
 
-    <div class="py-6 sm:py-12 page-content">
+    {{-- Chart.js --}}
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    @endpush
+
+    {{-- Chart data from controller --}}
+    @push('scripts')
+        <script>
+            window.__chartData = @json($chartData);
+        </script>
+    @endpush
+
+    <div class="py-6 sm:py-12 page-content" x-data="{ tab: 'overview' }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
 
-            <!-- Flash message -->
+            {{-- Flash message --}}
             @if (session('success'))
                 <div class="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
                     <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
                 </div>
             @endif
+
+            {{-- ============================================================= --}}
+            {{-- TAB BAR                                                        --}}
+            {{-- ============================================================= --}}
+            <div class="mb-6 border-b border-gray-200">
+                <div class="flex gap-1">
+                    <button @click="tab = 'overview'"
+                            :class="tab === 'overview' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="flex items-center gap-2 py-3 px-4 sm:px-6 border-b-2 font-semibold text-sm sm:text-base transition-colors whitespace-nowrap">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                        Overview
+                    </button>
+                    <button @click="tab = 'charts'"
+                            :class="tab === 'charts' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="flex items-center gap-2 py-3 px-4 sm:px-6 border-b-2 font-semibold text-sm sm:text-base transition-colors whitespace-nowrap">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h2v12h-2V4zM14 4h2v12h-2V4z"/></svg>
+                        Charts
+                    </button>
+                </div>
+            </div>
+
+            {{-- ============================================================= --}}
+            {{-- TAB 1: OVERVIEW (existing dashboard)                          --}}
+            {{-- ============================================================= --}}
+            <div x-show="tab === 'overview'" x-transition.opacity.duration.150ms>
 
             {{-- ============================================================= --}}
             {{-- MOBILE: TOTAL CAPITAL HERO                                     --}}
@@ -361,6 +398,258 @@
                     </table>
                 </div>
             </div>
+
+            </div>{{-- /TAB 1: OVERVIEW --}}
+
+            {{-- ============================================================= --}}
+            {{-- TAB 2: CHARTS                                                 --}}
+            {{-- ============================================================= --}}
+            <div x-show="tab === 'charts'" x-transition.opacity.duration.150ms
+                 x-data="chartsDashboard()"
+                 x-init="init()">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+
+                    {{-- 1. Income vs Expense (Monthly Bar) --}}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">💰 Income vs Expense (6 Months)</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas x-ref="incomeExpenseChart"></canvas>
+                        </div>
+                    </div>
+
+                    {{-- 2. Expense Breakdown (Doughnut) --}}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">💸 Expense Breakdown</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas x-ref="expenseChart"></canvas>
+                        </div>
+                    </div>
+
+                    {{-- 3. Herd Composition by Breed (Doughnut) --}}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">🐐 Herd Composition by Breed</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas x-ref="herdChart"></canvas>
+                        </div>
+                    </div>
+
+                    {{-- 4. Goat Status Distribution (Doughnut) --}}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">📊 Goat Status Distribution</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas x-ref="goatStatusChart"></canvas>
+                        </div>
+                    </div>
+
+                    {{-- 5. Investor Capital Distribution (Bar) --}}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">👥 Investor Capital Distribution</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas x-ref="investorChart"></canvas>
+                        </div>
+                    </div>
+
+                    {{-- 6. Monthly Net Profit Trend (Line) --}}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">📈 Net Profit Trend (6 Months)</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas x-ref="netProfitChart"></canvas>
+                        </div>
+                    </div>
+
+                    {{-- 7. Breeding / Pregnancy Status (Doughnut) --}}
+                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">🤱 Breeding & Pregnancy Status</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas x-ref="breedingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>{{-- /TAB 2: CHARTS --}}
         </div>
     </div>
+
+    {{-- ============================================================= --}}
+    {{-- Chart.js initialization script                                 --}}
+    {{-- ============================================================= --}}
+    @push('scripts')
+    <script>
+    function chartsDashboard() {
+        return {
+            charts: [],
+            initialized: false,
+            init() {
+                // Guard against Alpine re-initialization (x-init can fire more than once)
+                if (this.initialized) return;
+                // Wait for Chart.js to load
+                if (typeof Chart === 'undefined') {
+                    setTimeout(() => this.init(), 100);
+                    return;
+                }
+                this.initialized = true;
+                this.renderAll();
+            },
+            renderAll() {
+                const d = window.__chartData;
+                if (!d) return;
+
+                const palette = ['#16a34a', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
+
+                // Chart defaults
+                Chart.defaults.font.family = 'Figtree, sans-serif';
+                Chart.defaults.font.size = 12;
+
+                // --- 1. Income vs Expense Bar Chart ---
+                this.charts.push(new Chart(this.$refs.incomeExpenseChart, {
+                    type: 'bar',
+                    data: {
+                        labels: d.monthly_labels,
+                        datasets: [
+                            { label: 'Income', data: d.monthly_income, backgroundColor: '#16a34a', borderRadius: 4 },
+                            { label: 'Expense', data: d.monthly_expense, backgroundColor: '#ef4444', borderRadius: 4 },
+                        ],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
+                            tooltip: { callbacks: { label: (c) => c.dataset.label + ': PKR ' + Math.round(c.raw).toLocaleString() } },
+                        },
+                        scales: { y: { beginAtZero: true, ticks: { callback: (v) => 'PKR ' + v.toLocaleString() } } },
+                    },
+                }));
+
+                // --- 2. Expense Breakdown Doughnut ---
+                this.charts.push(new Chart(this.$refs.expenseChart, {
+                    type: 'doughnut',
+                    data: {
+                        labels: d.expense_categories.length ? d.expense_categories : ['No Data'],
+                        datasets: [{
+                            data: d.expense_amounts.length ? d.expense_amounts : [1],
+                            backgroundColor: palette,
+                            borderWidth: 2, borderColor: '#fff',
+                        }],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 11 } } },
+                            tooltip: { callbacks: { label: (c) => c.label + ': PKR ' + Math.round(c.raw).toLocaleString() } },
+                        },
+                    },
+                }));
+
+                // --- 3. Herd Composition by Breed Doughnut ---
+                this.charts.push(new Chart(this.$refs.herdChart, {
+                    type: 'doughnut',
+                    data: {
+                        labels: d.breed_names.length ? d.breed_names : ['No Data'],
+                        datasets: [{
+                            data: d.breed_counts.length ? d.breed_counts : [1],
+                            backgroundColor: palette,
+                            borderWidth: 2, borderColor: '#fff',
+                        }],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 11 } } },
+                            tooltip: { callbacks: { label: (c) => c.label + ': ' + c.raw + ' goats' } },
+                        },
+                    },
+                }));
+
+                // --- 4. Goat Status Distribution Doughnut ---
+                const gs = d.goat_status;
+                this.charts.push(new Chart(this.$refs.goatStatusChart, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['In Herd', 'Sold', 'Deceased'],
+                        datasets: [{
+                            data: [gs.in_herd, gs.sold, gs.deceased].every(v => v === 0) ? [1, 0, 0] : [gs.in_herd, gs.sold, gs.deceased],
+                            backgroundColor: ['#16a34a', '#3b82f6', '#ef4444'],
+                            borderWidth: 2, borderColor: '#fff',
+                        }],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
+                            tooltip: { callbacks: { label: (c) => c.label + ': ' + c.raw } },
+                        },
+                    },
+                }));
+
+                // --- 5. Investor Capital Distribution Bar ---
+                this.charts.push(new Chart(this.$refs.investorChart, {
+                    type: 'bar',
+                    data: {
+                        labels: d.investor_names.length ? d.investor_names : ['No Data'],
+                        datasets: [{
+                            label: 'Capital (PKR)',
+                            data: d.investor_capital.length ? d.investor_capital : [0],
+                            backgroundColor: '#1b3a2b',
+                            borderRadius: 4,
+                        }],
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (c) => 'PKR ' + Math.round(c.raw).toLocaleString() } },
+                        },
+                        scales: { x: { beginAtZero: true, ticks: { callback: (v) => 'PKR ' + v.toLocaleString() } } },
+                    },
+                }));
+
+                // --- 6. Monthly Net Profit Trend Line ---
+                this.charts.push(new Chart(this.$refs.netProfitChart, {
+                    type: 'line',
+                    data: {
+                        labels: d.monthly_labels,
+                        datasets: [{
+                            label: 'Net Profit',
+                            data: d.monthly_net_profit,
+                            borderColor: '#1b3a2b',
+                            backgroundColor: 'rgba(27, 58, 43, 0.1)',
+                            fill: true, tension: 0.3, borderWidth: 2, pointRadius: 4,
+                            pointBackgroundColor: '#16a34a',
+                        }],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
+                            tooltip: { callbacks: { label: (c) => 'PKR ' + Math.round(c.raw).toLocaleString() } },
+                        },
+                        scales: { y: { ticks: { callback: (v) => 'PKR ' + v.toLocaleString() } } },
+                    },
+                }));
+
+                // --- 7. Breeding / Pregnancy Status Doughnut ---
+                const bs = d.breeding_status;
+                this.charts.push(new Chart(this.$refs.breedingChart, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Bred', 'Pregnant', 'Open', 'Kidded'],
+                        datasets: [{
+                            data: [bs.bred, bs.pregnant, bs.open, bs.kidded].every(v => v === 0) ? [1, 0, 0, 0] : [bs.bred, bs.pregnant, bs.open, bs.kidded],
+                            backgroundColor: ['#f59e0b', '#8b5cf6', '#6b7280', '#16a34a'],
+                            borderWidth: 2, borderColor: '#fff',
+                        }],
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 11 } } },
+                            tooltip: { callbacks: { label: (c) => c.label + ': ' + c.raw } },
+                        },
+                    },
+                }));
+            },
+        };
+    }
+    </script>
+    @endpush
 </x-app-layout>
