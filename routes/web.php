@@ -8,6 +8,7 @@ use App\Http\Controllers\BreedingRecordController;
 use App\Http\Controllers\BudgetEntryController;
 use App\Http\Controllers\CaretakerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GoatController;
 use App\Http\Controllers\GoatImageController;
 use App\Http\Controllers\HealthRecordController;
@@ -113,6 +114,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('transactions', TransactionController::class)
         ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
+    // Exchanges (goat trading/barter)
+    Route::get('/exchanges/data', [ExchangeController::class, 'data'])->name('exchanges.data');
+    Route::resource('exchanges', ExchangeController::class)->except(['edit', 'update', 'destroy']);
+
     // Budget Planner
     Route::get('/budget', [BudgetEntryController::class, 'index'])->name('budget.index');
     Route::get('/budget/create', [BudgetEntryController::class, 'create'])->name('budget.create');
@@ -143,6 +148,8 @@ Route::middleware('auth')->group(function () {
 
     // Reports
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
+    Route::get('/reports/profit-loss/csv', [ReportController::class, 'exportCsv'])->name('reports.profit-loss.csv');
+    Route::get('/reports/profit-loss/pdf', [ReportController::class, 'exportPdf'])->name('reports.profit-loss.pdf');
     Route::post('/reports/distribute', [ReportController::class, 'distribute'])->name('reports.distribute');
     Route::post('/reports/distributions/{distribution}/mark-paid', [ReportController::class, 'markPaid'])->name('reports.distributions.mark-paid');
     Route::get('/reports/investors', [ReportController::class, 'investorIndex'])->name('reports.investors');

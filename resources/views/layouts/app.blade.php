@@ -59,6 +59,9 @@
                     'transactions.index' => 'Expenses & Income',
                     'transactions.create' => 'Add Transaction',
                     'transactions.edit' => 'Edit Transaction',
+                    'exchanges.index' => 'Exchanges',
+                    'exchanges.create' => 'Record Exchange',
+                    'exchanges.show' => 'Exchange Details',
                     'budget.index' => 'Budget Planner',
                     'budget.create' => 'Add Budget Row',
                     'budget.edit' => 'Edit Budget Row',
@@ -91,6 +94,7 @@
                 if ($routeName === 'goats.index') { $mobileAddRoute = route('goats.create'); $mobileAddLabel = 'Goat'; }
                 elseif ($routeName === 'investors.index') { $mobileAddRoute = route('investors.create'); $mobileAddLabel = 'Investor'; }
                 elseif ($routeName === 'transactions.index') { $mobileAddRoute = route('transactions.create'); $mobileAddLabel = 'Transaction'; }
+                elseif ($routeName === 'exchanges.index') { $mobileAddRoute = route('exchanges.create'); $mobileAddLabel = 'Exchange'; }
                 elseif ($routeName === 'breeds.index') { $mobileAddRoute = route('breeds.create'); $mobileAddLabel = 'Breed'; }
                 elseif ($routeName === 'budget.index') { $mobileAddRoute = route('budget.create'); $mobileAddLabel = 'Budget'; }
             }
@@ -177,7 +181,7 @@
             </a>
 
             {{-- More (opens slide-up sheet via Alpine store) --}}
-            <a href="#" @click.prevent="$store.ui.openMore()" class="{{ request()->routeIs('transactions.*') || request()->routeIs('breeds.*') || request()->routeIs('caretakers.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('budget.*') || request()->routeIs('instructions') || request()->routeIs('profile.*') || request()->routeIs('activity-logs.*') ? 'active' : '' }}">
+            <a href="#" @click.prevent="$store.ui.openMore()" class="{{ request()->routeIs('transactions.*') || request()->routeIs('exchanges.*') || request()->routeIs('breeds.*') || request()->routeIs('caretakers.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('budget.*') || request()->routeIs('instructions') || request()->routeIs('profile.*') || request()->routeIs('activity-logs.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 <span>More</span>
                 {{-- Offline pending count badge --}}
@@ -253,6 +257,12 @@
                                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                             </span>
                             <span class="more-label">Expenses</span>
+                        </a>
+                        <a href="{{ route('exchanges.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
+                            <span class="more-icon">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                            </span>
+                            <span class="more-label">Exchange</span>
                         </a>
                         <a href="{{ route('breeds.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
                             <span class="more-icon">
