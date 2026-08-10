@@ -93,7 +93,11 @@ class ExchangeController extends Controller
             ->addColumn('investor', fn (Exchange $e) => $e->investor ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">' . e($e->investor->name) . '</span>' : '<span class="text-gray-400 text-xs">Farm</span>')
             ->addColumn('actions', function (Exchange $e) {
                 return '<a href="' . route('exchanges.show', $e) . '" class="text-indigo-600 hover:underline text-xs">View</a>'
-                    . ' <a href="' . route('exchanges.edit', $e) . '" class="text-indigo-600 hover:underline text-xs ml-2">Edit</a>';
+                    . ' <a href="' . route('exchanges.edit', $e) . '" class="text-indigo-600 hover:underline text-xs ml-2">Edit</a>'
+                    . ' <form method="POST" action="' . route('exchanges.destroy', $e) . '" class="inline" onsubmit="return confirm(\'Delete this exchange? All related records will be removed and the outgoing goat restored to the herd.\');">'
+                    . csrf_field() . method_field('DELETE')
+                    . '<button type="submit" class="text-red-600 hover:underline text-xs ml-2">Delete</button>'
+                    . '</form>';
             })
             ->rawColumns(['outgoing', 'incoming', 'cash', 'investor', 'actions'])
             ->make(true);
@@ -504,5 +508,81 @@ class ExchangeController extends Controller
         $exchange->load(['outgoingGoat.breed', 'incomingGoat.breed', 'breed', 'investor']);
 
         return view('exchanges.show', compact('exchange'));
+    }
+
+    /**
+     * Delete an exchange and reverse all linked records.
+     *
+     * Steps (all inside DB::transaction):
+     * 1. Restore the outgoing goat to its pre-exchange status
+     * 2. Delete the incoming goat that was created by the exchange
+     * 3. Delete all transactions created by the exchange
+     * 4. Delete the investment record created for the cash difference
+     * 5. Soft-delete the exchange record itself
+     */
+    public function destroy(Exchange $exchange)
+    {
+        $exchange->load(['outgoingGoat', 'incomingGoat']);
+
+        DB::transaction(function () use ($exchange) {
+            $exchangeDate = $exchange->exchange_date->format('Y-m-d');
+            $outgoingGoatId = $exchange->outgoing_goat_id;
+            $incomingGoatId = $exchange->incoming_goat_id;
+            $investorId = $exchange->investor_id;
+
+            // --- 1. Restore outgoing goat to active herd ---
+            if ($exchange->outgoingGoat) {
+                $exchange->outgoingGoat->update([
+                    'status'     => 'breeder',
+                    'sale_price' => 0,
+                    'sale_date'  => null,
+                    'sale_weight'=> 0,
+                ]);
+            }
+
+            // --- 2. Delete the incoming goat created by this exchange ---
+            if ($exchange->incomingGoat) {
+                $exchange->incomingGoat->delete(); // soft-delete (Goat uses SoftDeletes)
+            }
+
+            // --- 3. Delete all transactions created by this exchange ---
+            // Goat Sales income (outgoing goat)
+            Transaction::where('type', 'income')
+                ->where('category', 'Goat Sales')
+                ->where('goat_id', $outgoingGoatId)
+                ->where('date', $exchangeDate)
+                ->delete();
+
+            // Goat Purchases expense (cash difference paid — linked to incoming goat)
+            if ($incomingGoatId) {
+                Transaction::where('type', 'expense')
+                    ->where('category', 'Goat Purchases')
+                    ->where('goat_id', $incomingGoatId)
+                    ->where('date', $exchangeDate)
+                    ->delete();
+            }
+
+            // Other Income (cash received — linked to outgoing goat)
+            Transaction::where('type', 'income')
+                ->where('category', 'Other Income')
+                ->where('goat_id', $outgoingGoatId)
+                ->where('date', $exchangeDate)
+                ->delete();
+
+            // --- 4. Delete the investment record for the cash difference ---
+            if ($investorId) {
+                Investment::where('investor_id', $investorId)
+                    ->where('date', $exchangeDate)
+                    ->where('notes', 'like', '%Cash difference for exchange%')
+                    ->delete();
+            }
+
+            // --- 5. Soft-delete the exchange record ---
+            $exchange->delete();
+        });
+
+        return redirect()
+            ->route('exchanges.index')
+            ->with('success', 'Exchange deleted. All related transactions, investment, and the incoming goat have been removed. The outgoing goat has been restored to the herd.');
     }
 }

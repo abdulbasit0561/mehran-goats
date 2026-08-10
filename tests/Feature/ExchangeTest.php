@@ -234,11 +234,22 @@ class ExchangeTest extends TestCase
 
     public function test_show_page_displays_exchange_details(): void
     {
+        // Create a real incoming goat so the show view can link to it
+        $incomingGoat = Goat::create([
+            'tag_id'         => 'INC-006',
+            'breed_id'       => $this->breed->id,
+            'gender'         => 'female',
+            'weight_kg'      => 20,
+            'status'         => 'grower',
+            'purchase_price' => 65000,
+            'birth_type'     => 'purchased',
+        ]);
+
         $exchange = Exchange::create([
             'exchange_date'     => now()->format('Y-m-d'),
             'outgoing_goat_id'  => $this->goat->id,
             'outgoing_value'    => 40000,
-            'incoming_goat_id'  => null,
+            'incoming_goat_id'  => $incomingGoat->id,
             'incoming_tag_id'   => 'INC-006',
             'breed_id'          => $this->breed->id,
             'incoming_gender'   => 'female',
@@ -262,18 +273,16 @@ class ExchangeTest extends TestCase
 
     public function test_exchange_datatables_endpoint_returns_data(): void
     {
-        Exchange::create([
-            'exchange_date'     => now()->format('Y-m-d'),
-            'outgoing_goat_id'  => $this->goat->id,
-            'outgoing_value'    => 40000,
-            'incoming_goat_id'  => null,
-            'incoming_tag_id'   => 'INC-007',
-            'breed_id'          => $this->breed->id,
-            'incoming_gender'   => 'male',
-            'incoming_value'    => 40000,
-            'cash_direction'    => 'none',
-            'cash_amount'       => 0,
-            'payment_method'    => 'cash',
+        // Create via POST so all linked records exist
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'INC-007',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'male',
+            'incoming_value'     => 40000,
+            'payment_method'     => 'cash',
         ]);
 
         $response = $this->get('/exchanges/data');
@@ -673,5 +682,107 @@ class ExchangeTest extends TestCase
             'investor_id' => $investor->id,
             'amount'      => 35000,
         ]);
+    }
+
+    // ---- DELETE TESTS --------------------------------------------------
+
+    public function test_delete_removes_exchange_and_all_linked_records(): void
+    {
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'DEL-001',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'counterparty'       => 'Ahmed',
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'DEL-001')->first();
+        $incomingGoat = $exchange->incomingGoat;
+        $exchangeDate = $exchange->exchange_date->format('Y-m-d');
+
+        // Verify records exist before delete
+        $this->assertDatabaseHas('transactions', ['category' => 'Goat Sales', 'goat_id' => $this->goat->id, 'date' => $exchangeDate]);
+        $this->assertDatabaseHas('transactions', ['category' => 'Goat Purchases', 'goat_id' => $incomingGoat->id, 'date' => $exchangeDate]);
+        $this->assertDatabaseHas('goats', ['id' => $incomingGoat->id]);
+
+        // Delete
+        $response = $this->delete("/exchanges/{$exchange->id}");
+
+        $response->assertRedirect('/exchanges');
+        $response->assertSessionHas('success');
+
+        // Exchange soft-deleted
+        $this->assertSoftDeleted('exchanges', ['id' => $exchange->id]);
+
+        // All transactions deleted
+        $this->assertDatabaseMissing('transactions', ['category' => 'Goat Sales', 'goat_id' => $this->goat->id, 'date' => $exchangeDate]);
+        $this->assertDatabaseMissing('transactions', ['category' => 'Goat Purchases', 'goat_id' => $incomingGoat->id, 'date' => $exchangeDate]);
+
+        // Incoming goat soft-deleted
+        $this->assertSoftDeleted('goats', ['id' => $incomingGoat->id]);
+    }
+
+    public function test_delete_restores_outgoing_goat_to_herd(): void
+    {
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'DEL-002',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'DEL-002')->first();
+
+        // Outgoing goat should be sold
+        $this->goat->refresh();
+        $this->assertEquals('sold', $this->goat->status);
+
+        // Delete
+        $this->delete("/exchanges/{$exchange->id}");
+
+        // Outgoing goat restored to herd
+        $this->goat->refresh();
+        $this->assertNotEquals('sold', $this->goat->status);
+        $this->assertEquals('0.00', (string) $this->goat->sale_price);
+    }
+
+    public function test_delete_removes_investment_record(): void
+    {
+        $investor = Investor::create([
+            'name'              => 'Delete Investor',
+            'role'              => 'investor',
+            'expense_split_pct' => 33.33,
+        ]);
+
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'DEL-003',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'DEL-003')->first();
+
+        // Investment exists
+        $this->assertEquals(1, \App\Models\Investment::count());
+
+        // Delete
+        $this->delete("/exchanges/{$exchange->id}");
+
+        // Investment removed
+        $this->assertEquals(0, \App\Models\Investment::count());
     }
 }
