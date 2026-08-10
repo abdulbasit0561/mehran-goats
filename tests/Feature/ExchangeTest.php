@@ -537,4 +537,141 @@ class ExchangeTest extends TestCase
             'investor_id' => $investor->id,
         ]);
     }
+
+    // ---- INVESTMENT CREATION TESTS ------------------------------------
+
+    public function test_investor_cash_difference_creates_investment_record(): void
+    {
+        $investor = Investor::create([
+            'name'              => 'Test Investor',
+            'role'              => 'investor',
+            'expense_split_pct' => 33.33,
+        ]);
+
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'INV-001',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ]);
+
+        // Investment record should exist for the 25,000 cash difference
+        $this->assertDatabaseHas('investments', [
+            'investor_id' => $investor->id,
+            'amount'      => 25000,
+        ]);
+
+        // Investor's total_capital should now reflect the 25,000
+        $investor->refresh();
+        $this->assertEquals(25000, (float) $investor->total_capital);
+    }
+
+    public function test_no_investor_means_no_investment_created(): void
+    {
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'INV-002',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'payment_method'     => 'cash',
+        ]);
+
+        // No investment records should exist
+        $this->assertEquals(0, \App\Models\Investment::count());
+    }
+
+    public function test_update_syncs_investment_when_investor_added(): void
+    {
+        // Create exchange without investor
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'INV-003',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'INV-003')->first();
+        $this->assertEquals(0, \App\Models\Investment::count());
+
+        // Now assign an investor via edit
+        $investor = Investor::create([
+            'name'              => 'Assign Investor',
+            'role'              => 'investor',
+            'expense_split_pct' => 50,
+        ]);
+
+        $this->put("/exchanges/{$exchange->id}", [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_value'     => 40000,
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ]);
+
+        // Investment record should now exist
+        $this->assertDatabaseHas('investments', [
+            'investor_id' => $investor->id,
+            'amount'      => 25000,
+        ]);
+    }
+
+    public function test_update_syncs_investment_when_cash_amount_changes(): void
+    {
+        $investor = Investor::create([
+            'name'              => 'Change Investor',
+            'role'              => 'investor',
+            'expense_split_pct' => 33.33,
+        ]);
+
+        // Create with 25,000 cash difference
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'INV-004',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'INV-004')->first();
+        $this->assertEquals(25000, (float) \App\Models\Investment::first()->amount);
+
+        // Edit: change values so cash difference becomes 35,000
+        $this->put("/exchanges/{$exchange->id}", [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_value'     => 40000,
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 75000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ]);
+
+        // Old 25,000 investment should be gone, new 35,000 should exist
+        $this->assertDatabaseMissing('investments', [
+            'investor_id' => $investor->id,
+            'amount'      => 25000,
+        ]);
+        $this->assertDatabaseHas('investments', [
+            'investor_id' => $investor->id,
+            'amount'      => 35000,
+        ]);
+    }
 }

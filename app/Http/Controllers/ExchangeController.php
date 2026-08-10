@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Breed;
 use App\Models\Exchange;
 use App\Models\Goat;
+use App\Models\Investment;
 use App\Models\Investor;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -225,6 +226,18 @@ class ExchangeController extends Controller
                     'payment_method' => $paymentMethod,
                     'notes'          => 'Cash difference paid for exchange (received ' . $validated['incoming_tag_id'] . ')',
                 ]);
+
+                // --- Step 4b: If an investor funded the cash difference,
+                // record it as a capital investment so their total_capital
+                // and share_pct increase to reflect the money they put in. ---
+                if ($investorId) {
+                    Investment::create([
+                        'investor_id' => $investorId,
+                        'amount'      => $cashAmount,
+                        'date'        => $validated['exchange_date'],
+                        'notes'       => 'Cash difference for exchange: gave ' . $outgoingGoat->tag_id . ', received ' . $validated['incoming_tag_id'],
+                    ]);
+                }
             } elseif ($cashDirection === 'received' && $cashAmount > 0) {
                 // Receiving cash back: it's income
                 // If an investor received it, tag it accordingly.
@@ -409,6 +422,23 @@ class ExchangeController extends Controller
                     'investor_id'    => $investorId,
                     'payment_method' => $paymentMethod,
                     'notes'          => 'Cash received from exchange (gave ' . ($outgoingGoat?->tag_id ?? '') . ')',
+                ]);
+            }
+
+            // --- Sync Investment record for the cash difference ---
+            // Delete the old investment linked to this exchange
+            Investment::where('investor_id', $exchange->investor_id)
+                ->where('date', $oldDate)
+                ->where('notes', 'like', '%Cash difference for exchange%')
+                ->delete();
+
+            // If an investor is now assigned and they're paying cash, create/update investment
+            if ($investorId && $cashDirection === 'paid' && $cashAmount > 0) {
+                Investment::create([
+                    'investor_id' => $investorId,
+                    'amount'      => $cashAmount,
+                    'date'        => $validated['exchange_date'],
+                    'notes'       => 'Cash difference for exchange: gave ' . ($outgoingGoat?->tag_id ?? '') . ', received ' . $exchange->incoming_tag_id,
                 ]);
             }
 
