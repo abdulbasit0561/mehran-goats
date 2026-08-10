@@ -34,18 +34,12 @@ class TransactionController extends Controller
             $query->where('date', '<=', $request->get('to'));
         }
 
-        $transactions = $query->latest('date')->paginate(20)->withQueryString();
-
-        // For filters
-        $categories = collect(array_merge(Transaction::EXPENSE_CATEGORIES, Transaction::INCOME_CATEGORIES))->unique()->sort()->values();
-        $investors  = Investor::orderBy('name')->get(['id', 'name']);
-
-        // --- Expense Summary (respects the same filters as the table) ---
+        // --- Compute summary totals BEFORE paginate() ---
+        // paginate() mutates $query by injecting OFFSET + LIMIT, which would
+        // leak into the aggregate queries below if we cloned afterwards.
         $totalExpenses = (float) (clone $query)->where('type', 'expense')->sum('amount');
         $totalIncome   = (float) (clone $query)->where('type', 'income')->sum('amount');
 
-        // Dynamic top expense categories from the filtered set
-        // reorder() clears the inherited 'latest date' so ordering is by total
         $topCategories = (clone $query)
             ->where('type', 'expense')
             ->selectRaw('category, SUM(amount) as total')
@@ -60,6 +54,13 @@ class TransactionController extends Controller
             'total_income'  => $totalIncome,
             'categories'    => $topCategories,
         ];
+
+        // --- Paginate AFTER summary is computed ---
+        $transactions = $query->latest('date')->paginate(20)->withQueryString();
+
+        // For filters
+        $categories = collect(array_merge(Transaction::EXPENSE_CATEGORIES, Transaction::INCOME_CATEGORIES))->unique()->sort()->values();
+        $investors  = Investor::orderBy('name')->get(['id', 'name']);
 
         return view('transactions.index', compact('transactions', 'categories', 'investors', 'summary'));
     }
