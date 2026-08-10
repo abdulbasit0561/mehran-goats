@@ -40,17 +40,25 @@ class TransactionController extends Controller
         $categories = collect(array_merge(Transaction::EXPENSE_CATEGORIES, Transaction::INCOME_CATEGORIES))->unique()->sort()->values();
         $investors  = Investor::orderBy('name')->get(['id', 'name']);
 
-        // --- Expense Summary ---
-        $totalExpenses    = (float) Transaction::expense()->sum('amount');
-        $feedTotal        = (float) Transaction::expense()->where('category', 'Feed & Fodder')->sum('amount');
-        $vetTotal         = (float) Transaction::expense()->where('category', 'Veterinary & Medicine')->sum('amount');
-        $laborTotal       = (float) Transaction::expense()->where('category', 'Labor / Wages')->sum('amount');
+        // --- Expense Summary (respects the same filters as the table) ---
+        $totalExpenses = (float) (clone $query)->where('type', 'expense')->sum('amount');
+        $totalIncome   = (float) (clone $query)->where('type', 'income')->sum('amount');
+
+        // Dynamic top expense categories from the filtered set
+        // reorder() clears the inherited 'latest date' so ordering is by total
+        $topCategories = (clone $query)
+            ->where('type', 'expense')
+            ->selectRaw('category, SUM(amount) as total')
+            ->groupBy('category')
+            ->reorder()
+            ->orderByDesc('total')
+            ->limit(3)
+            ->get();
 
         $summary = [
-            'total'   => $totalExpenses,
-            'feed'    => $feedTotal,
-            'vet'     => $vetTotal,
-            'labor'   => $laborTotal,
+            'total_expense' => $totalExpenses,
+            'total_income'  => $totalIncome,
+            'categories'    => $topCategories,
         ];
 
         return view('transactions.index', compact('transactions', 'categories', 'investors', 'summary'));

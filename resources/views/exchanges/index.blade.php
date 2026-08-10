@@ -76,6 +76,11 @@
                                     <span class="text-xs text-gray-400 ml-1">· {{ $exchange->counterparty }}</span>
                                 @endif
                             </div>
+                            @if ($exchange->investor)
+                                <div class="mt-1.5">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800">{{ $exchange->investor->name }}</span>
+                                </div>
+                            @endif
                         </a>
                     </div>
                 @empty
@@ -124,6 +129,7 @@
                                 <th>Goat Given Away</th>
                                 <th>Goat Received</th>
                                 <th>Counterparty</th>
+                                <th>Paid / Received By</th>
                                 <th class="text-right!">Cash Difference</th>
                                 <th>Actions</th>
                             </tr>
@@ -146,6 +152,7 @@
                     { data: 'outgoing', name: 'outgoing' },
                     { data: 'incoming', name: 'incoming' },
                     { data: 'counterparty', name: 'counterparty' },
+                    { data: 'investor', name: 'investor' },
                     { data: 'cash', name: 'cash', className: 'text-right' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false },
                 ],

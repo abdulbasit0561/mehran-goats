@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Breed;
 use App\Models\Exchange;
 use App\Models\Goat;
+use App\Models\Investor;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -279,5 +280,98 @@ class ExchangeTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.0.incoming_tag_id', 'INC-007');
+    }
+
+    public function test_investor_id_is_propagated_to_cash_difference_expense(): void
+    {
+        $investor = Investor::create([
+            'name'            => 'Test Investor',
+            'role'            => 'investor',
+            'expense_split_pct' => 33.33,
+        ]);
+
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'INC-INV-1',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ])->assertRedirect('/exchanges');
+
+        // The cash difference expense should be tagged with the investor
+        $this->assertDatabaseHas('transactions', [
+            'type'        => 'expense',
+            'category'    => 'Goat Purchases',
+            'amount'      => 25000,
+            'investor_id' => $investor->id,
+        ]);
+
+        // The Goat Sales income should also be tagged
+        $this->assertDatabaseHas('transactions', [
+            'type'        => 'income',
+            'category'    => 'Goat Sales',
+            'amount'      => 40000,
+            'investor_id' => $investor->id,
+        ]);
+
+        // Exchange record should have the investor
+        $this->assertDatabaseHas('exchanges', [
+            'investor_id' => $investor->id,
+        ]);
+    }
+
+    public function test_investor_id_is_propagated_to_cash_received_income(): void
+    {
+        $investor = Investor::create([
+            'name'            => 'Test Investor 2',
+            'role'            => 'investor',
+            'expense_split_pct' => 33.33,
+        ]);
+
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 65000,
+            'incoming_tag_id'    => 'INC-INV-2',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'male',
+            'incoming_value'     => 40000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ])->assertRedirect('/exchanges');
+
+        // Cash received income tagged with investor
+        $this->assertDatabaseHas('transactions', [
+            'type'        => 'income',
+            'category'    => 'Other Income',
+            'amount'      => 25000,
+            'investor_id' => $investor->id,
+        ]);
+    }
+
+    public function test_exchange_without_investor_leaves_transactions_untagged(): void
+    {
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'INC-NO-INV',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'payment_method'     => 'cash',
+        ])->assertRedirect('/exchanges');
+
+        // Expense transaction should have null investor_id
+        $this->assertDatabaseHas('transactions', [
+            'type'        => 'expense',
+            'category'    => 'Goat Purchases',
+            'amount'      => 25000,
+            'investor_id' => null,
+        ]);
     }
 }

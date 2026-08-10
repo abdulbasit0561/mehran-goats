@@ -25,6 +25,7 @@ class Exchange extends Model
         'cash_direction',
         'cash_amount',
         'payment_method',
+        'investor_id',
         'notes',
     ];
 
@@ -49,6 +50,11 @@ class Exchange extends Model
     public function breed(): BelongsTo
     {
         return $this->belongsTo(Breed::class);
+    }
+
+    public function investor(): BelongsTo
+    {
+        return $this->belongsTo(Investor::class);
     }
 
     /** Net value change of the herd from this exchange (incoming - outgoing). */

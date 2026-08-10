@@ -94,6 +94,22 @@
                             @endif
                         </div>
                     </div>
+                    @if ($exchange->investor)
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <p class="text-xs text-gray-400">Cash handled by:</p>
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">{{ $exchange->investor->name }}</span>
+                            @if ($exchange->cash_direction === 'paid')
+                                <p class="text-xs text-gray-500 mt-1">This investor paid the cash difference — it's tagged on their expense transactions.</p>
+                            @elseif ($exchange->cash_direction === 'received')
+                                <p class="text-xs text-gray-500 mt-1">This investor received the cash difference — it's tagged on their income transactions.</p>
+                            @endif
+                        </div>
+                    @elseif ($exchange->cash_direction !== 'none')
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <p class="text-xs text-gray-400">Cash handled by: <span class="font-medium text-gray-600">General Farm</span></p>
+                            <p class="text-xs text-gray-500">No specific investor tagged — split by expense split % across all investors.</p>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Net herd value impact --}}

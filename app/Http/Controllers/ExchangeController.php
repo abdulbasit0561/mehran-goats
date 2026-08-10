@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Breed;
 use App\Models\Exchange;
 use App\Models\Goat;
+use App\Models\Investor;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ class ExchangeController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Exchange::with(['outgoingGoat.breed', 'incomingGoat.breed', 'breed']);
+        $query = Exchange::with(['outgoingGoat.breed', 'incomingGoat.breed', 'breed', 'investor']);
 
         if ($search = $request->get('q')) {
             $query->where(function ($q) use ($search) {
@@ -50,7 +51,7 @@ class ExchangeController extends Controller
      */
     public function data(Request $request)
     {
-        $query = Exchange::with(['outgoingGoat.breed', 'incomingGoat.breed', 'breed'])
+        $query = Exchange::with(['outgoingGoat.breed', 'incomingGoat.breed', 'breed', 'investor'])
             ->select('exchanges.*');
 
         return DataTables::of($query)
@@ -88,10 +89,11 @@ class ExchangeController extends Controller
                 return '<span class="font-medium text-green-600">+' . number_format($e->cash_amount, 0) . '</span>';
             })
             ->editColumn('counterparty', fn (Exchange $e) => e($e->counterparty ?? '—'))
+            ->addColumn('investor', fn (Exchange $e) => $e->investor ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">' . e($e->investor->name) . '</span>' : '<span class="text-gray-400 text-xs">Farm</span>')
             ->addColumn('actions', function (Exchange $e) {
                 return '<a href="' . route('exchanges.show', $e) . '" class="text-indigo-600 hover:underline text-xs">View</a>';
             })
-            ->rawColumns(['outgoing', 'incoming', 'cash', 'actions'])
+            ->rawColumns(['outgoing', 'incoming', 'cash', 'investor', 'actions'])
             ->make(true);
     }
 
@@ -108,8 +110,9 @@ class ExchangeController extends Controller
         $herdGoats->load('breed');
 
         $breeds = Breed::orderBy('name')->pluck('name', 'id');
+        $investors = Investor::orderBy('name')->pluck('name', 'id');
 
-        return view('exchanges.create', compact('herdGoats', 'breeds'));
+        return view('exchanges.create', compact('herdGoats', 'breeds', 'investors'));
     }
 
     /**
@@ -135,6 +138,7 @@ class ExchangeController extends Controller
             'incoming_value'    => ['required', 'numeric', 'min:0'],
             'counterparty'      => ['nullable', 'string', 'max:255'],
             'payment_method'    => ['nullable', 'in:cash,bank_transfer,check,other'],
+            'investor_id'       => ['nullable', 'exists:investors,id'],
             'notes'             => ['nullable', 'string'],
         ]);
 
@@ -169,6 +173,8 @@ class ExchangeController extends Controller
             $validated, $outgoingGoat, $outgoingValue,
             $incomingValue, $cashDirection, $cashAmount, $paymentMethod
         ) {
+            $investorId = $validated['investor_id'] ?? null;
+
             // --- Step 1: Mark outgoing goat as sold ---
             $outgoingGoat->update([
                 'status'    => 'sold',
@@ -183,6 +189,7 @@ class ExchangeController extends Controller
                 'amount'         => $outgoingValue,
                 'date'           => $validated['exchange_date'],
                 'goat_id'        => $outgoingGoat->id,
+                'investor_id'    => $investorId,
                 'payment_method' => $paymentMethod,
                 'notes'          => 'Exchanged with ' . ($validated['counterparty'] ?? 'counterparty') . ' for incoming goat',
             ]);
@@ -205,23 +212,28 @@ class ExchangeController extends Controller
             // --- Step 4: Record cash difference ---
             if ($cashDirection === 'paid' && $cashAmount > 0) {
                 // Paying extra: it's an acquisition cost (expense)
+                // If an investor paid, tag it so it counts toward their
+                // expense_paid and settlement balance.
                 Transaction::create([
                     'type'           => 'expense',
                     'category'       => 'Goat Purchases',
                     'amount'         => $cashAmount,
                     'date'           => $validated['exchange_date'],
                     'goat_id'        => $incomingGoat->id,
+                    'investor_id'    => $investorId,
                     'payment_method' => $paymentMethod,
                     'notes'          => 'Cash difference paid for exchange (received ' . $validated['incoming_tag_id'] . ')',
                 ]);
             } elseif ($cashDirection === 'received' && $cashAmount > 0) {
                 // Receiving cash back: it's income
+                // If an investor received it, tag it accordingly.
                 Transaction::create([
                     'type'           => 'income',
                     'category'       => 'Other Income',
                     'amount'         => $cashAmount,
                     'date'           => $validated['exchange_date'],
                     'goat_id'        => $outgoingGoat->id,
+                    'investor_id'    => $investorId,
                     'payment_method' => $paymentMethod,
                     'notes'          => 'Cash received from exchange (gave ' . $outgoingGoat->tag_id . ')',
                 ]);
@@ -242,6 +254,7 @@ class ExchangeController extends Controller
                 'cash_direction'    => $cashDirection,
                 'cash_amount'       => $cashAmount,
                 'payment_method'    => $paymentMethod,
+                'investor_id'       => $investorId,
                 'notes'             => $validated['notes'] ?? null,
             ]);
         });
@@ -256,7 +269,7 @@ class ExchangeController extends Controller
      */
     public function show(Exchange $exchange)
     {
-        $exchange->load(['outgoingGoat.breed', 'incomingGoat.breed', 'breed']);
+        $exchange->load(['outgoingGoat.breed', 'incomingGoat.breed', 'breed', 'investor']);
 
         return view('exchanges.show', compact('exchange'));
     }

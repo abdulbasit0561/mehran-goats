@@ -15,24 +15,25 @@
                 </div>
             @endif
 
-            {{-- Expense Summary Cards --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
+            {{-- Summary Cards (respect table filters) --}}
+            @php
+                $catColors = ['border-amber-500', 'border-teal-500', 'border-indigo-500'];
+            @endphp
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
                 <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-red-500">
                     <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Total Expenses</p>
-                    <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['total'], 0) }}</p>
+                    <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['total_expense'], 0) }}</p>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-amber-500">
-                    <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Feed &amp; Fodder</p>
-                    <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['feed'], 0) }}</p>
+                <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-green-500">
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Total Income</p>
+                    <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['total_income'], 0) }}</p>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-teal-500">
-                    <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Veterinary</p>
-                    <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['vet'], 0) }}</p>
-                </div>
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-indigo-500">
-                    <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Labor / Wages</p>
-                    <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($summary['labor'], 0) }}</p>
-                </div>
+                @foreach ($summary['categories'] as $index => $cat)
+                    <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 {{ $catColors[$index % 3] }}">
+                        <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">{{ $cat->category }}</p>
+                        <p class="mt-1 sm:mt-2 text-base sm:text-xl font-bold text-gray-900">{{ number_format($cat->total, 0) }}</p>
+                    </div>
+                @endforeach
             </div>
 
             {{-- ============================================================= --}}

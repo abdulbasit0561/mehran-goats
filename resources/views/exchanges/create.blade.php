@@ -129,6 +129,21 @@
                         </div>
                     </div>
 
+                    {{-- === WHO PAID / RECEIVED THE CASH? === --}}
+                    <div class="mb-6 p-4 rounded-lg bg-purple-50 border border-purple-100">
+                        <h3 class="text-sm font-bold text-purple-800 mb-2">👤 Who Paid / Received the Cash Difference?</h3>
+                        <p class="text-xs text-purple-600 mb-3">If an investor paid the cash difference from their own pocket, select them here. This ensures their expense share and settlement balance are accurate. Leave blank if it's a general farm expense.</p>
+                        <div>
+                            <x-input-label for="investor_id" :value="__('Investor (optional)')" />
+                            <select id="investor_id" name="investor_id" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+                                <option value="">— General Farm (no specific investor) —</option>
+                                @foreach ($investors as $id => $name)
+                                    <option value="{{ $id }}" {{ old('investor_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="mb-6">
                         <x-input-label for="notes" :value="__('Notes')" />
                         <textarea id="notes" name="notes" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm">{{ old('notes') }}</textarea>
