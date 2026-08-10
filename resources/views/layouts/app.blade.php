@@ -61,6 +61,7 @@
                     'transactions.edit' => 'Edit Transaction',
                     'exchanges.index' => 'Exchanges',
                     'exchanges.create' => 'Record Exchange',
+                    'exchanges.edit' => 'Edit Exchange',
                     'exchanges.show' => 'Exchange Details',
                     'budget.index' => 'Budget Planner',
                     'budget.create' => 'Add Budget Row',

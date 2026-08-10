@@ -116,7 +116,7 @@ Route::middleware('auth')->group(function () {
 
     // Exchanges (goat trading/barter)
     Route::get('/exchanges/data', [ExchangeController::class, 'data'])->name('exchanges.data');
-    Route::resource('exchanges', ExchangeController::class)->except(['edit', 'update', 'destroy']);
+    Route::resource('exchanges', ExchangeController::class)->except(['destroy']);
 
     // Budget Planner
     Route::get('/budget', [BudgetEntryController::class, 'index'])->name('budget.index');

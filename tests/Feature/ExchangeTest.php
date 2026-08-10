@@ -374,4 +374,167 @@ class ExchangeTest extends TestCase
             'investor_id' => null,
         ]);
     }
+
+    // ---- EDIT TESTS ----------------------------------------------------
+
+    public function test_edit_form_loads_with_pre_filled_data(): void
+    {
+        // Create an exchange via POST so all linked records exist
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'EDIT-001',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'counterparty'       => 'Ahmed',
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'EDIT-001')->first();
+
+        $response = $this->get("/exchanges/{$exchange->id}/edit");
+
+        $response->assertStatus(200);
+        $response->assertSee('Edit Exchange');
+        $response->assertSee('EDIT-001');
+        $response->assertSee('40000');
+        $response->assertSee('65000');
+        $response->assertSee('Ahmed');
+    }
+
+    public function test_update_changes_values_and_syncs_transactions(): void
+    {
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'EDIT-002',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'counterparty'       => 'Original Party',
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'EDIT-002')->first();
+
+        // Now update: change values
+        $response = $this->put("/exchanges/{$exchange->id}", [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_value'     => 50000,
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'male',
+            'incoming_value'     => 70000,
+            'counterparty'       => 'Updated Party',
+            'payment_method'     => 'bank_transfer',
+            'notes'              => 'Updated notes',
+        ]);
+
+        $response->assertRedirect(route('exchanges.show', $exchange));
+        $response->assertSessionHas('success');
+
+        $exchange->refresh();
+        $this->assertEquals(50000, (float) $exchange->outgoing_value);
+        $this->assertEquals(70000, (float) $exchange->incoming_value);
+        $this->assertEquals('Updated Party', $exchange->counterparty);
+        $this->assertEquals('paid', $exchange->cash_direction);
+        $this->assertEquals(20000, (float) $exchange->cash_amount);
+
+        // Goat Sales income should be updated to new outgoing value
+        $this->assertDatabaseHas('transactions', [
+            'type'     => 'income',
+            'category' => 'Goat Sales',
+            'amount'   => 50000,
+        ]);
+
+        // Old cash difference (25000) should be gone, new one (20000) created
+        $this->assertDatabaseMissing('transactions', [
+            'type'     => 'expense',
+            'category' => 'Goat Purchases',
+            'amount'   => 25000,
+        ]);
+        $this->assertDatabaseHas('transactions', [
+            'type'     => 'expense',
+            'category' => 'Goat Purchases',
+            'amount'   => 20000,
+        ]);
+    }
+
+    public function test_update_goat_values_are_synced(): void
+    {
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'EDIT-003',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'EDIT-003')->first();
+        $incomingGoat = $exchange->incomingGoat;
+
+        $this->put("/exchanges/{$exchange->id}", [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_value'     => 45000,
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'male',
+            'incoming_value'     => 80000,
+            'payment_method'     => 'cash',
+        ]);
+
+        // Incoming goat purchase_price should be updated
+        $incomingGoat->refresh();
+        $this->assertEquals(80000, (float) $incomingGoat->purchase_price);
+        $this->assertEquals('male', $incomingGoat->gender);
+
+        // Outgoing goat sale_price should be updated
+        $this->goat->refresh();
+        $this->assertEquals(45000, (float) $this->goat->sale_price);
+    }
+
+    public function test_update_can_assign_investor_after_creation(): void
+    {
+        $this->post('/exchanges', [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_goat_id'   => $this->goat->id,
+            'outgoing_value'     => 40000,
+            'incoming_tag_id'    => 'EDIT-004',
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange = Exchange::where('incoming_tag_id', 'EDIT-004')->first();
+        $investor = Investor::create([
+            'name'            => 'Edit Investor',
+            'role'            => 'investor',
+            'expense_split_pct' => 33.33,
+        ]);
+
+        $this->put("/exchanges/{$exchange->id}", [
+            'exchange_date'      => now()->format('Y-m-d'),
+            'outgoing_value'     => 40000,
+            'breed_id'           => $this->breed->id,
+            'incoming_gender'    => 'female',
+            'incoming_value'     => 65000,
+            'investor_id'        => $investor->id,
+            'payment_method'     => 'cash',
+        ]);
+
+        $exchange->refresh();
+        $this->assertEquals($investor->id, $exchange->investor_id);
+
+        // Goat Sales income should now be tagged with the investor
+        $this->assertDatabaseHas('transactions', [
+            'type'        => 'income',
+            'category'    => 'Goat Sales',
+            'investor_id' => $investor->id,
+        ]);
+    }
 }

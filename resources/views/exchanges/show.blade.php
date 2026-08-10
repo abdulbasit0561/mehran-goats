@@ -2,7 +2,12 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Exchange Details</h2>
-            <a href="{{ route('exchanges.index') }}" class="text-sm text-gray-500 hover:underline">← Back to Exchanges</a>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('exchanges.edit', $exchange) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition">
+                    ✏️ Edit
+                </a>
+                <a href="{{ route('exchanges.index') }}" class="text-sm text-gray-500 hover:underline">← Back</a>
+            </div>
         </div>
     </x-slot>
 

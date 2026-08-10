@@ -82,6 +82,7 @@
                                 </div>
                             @endif
                         </a>
+                        <a href="{{ route('exchanges.edit', $exchange) }}" class="absolute top-2 right-2 text-indigo-600 hover:text-indigo-800 text-xs">✏️</a>
                     </div>
                 @empty
                     <div class="mobile-card-item text-center py-8">
