@@ -76,8 +76,11 @@
                             <x-dropdown-link :href="route('budget.index')" :active="request()->routeIs('budget.*')">
                                 {{ __('Budget') }}
                             </x-dropdown-link>
-                            <x-dropdown-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.*')">
-                                {{ __('Reports') }}
+                            <x-dropdown-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.profit-loss*')">
+                                {{ __('Profit & Loss') }}
+                            </x-dropdown-link>
+                            <x-dropdown-link :href="route('reports.yearly-clearance.index')" :active="request()->routeIs('reports.yearly-clearance*')">
+                                {{ __('Yearly Clearance') }}
                             </x-dropdown-link>
                         </x-slot>
                     </x-dropdown>

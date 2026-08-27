@@ -15,6 +15,8 @@ use App\Models\ProfitDistribution;
 use App\Models\SiteService;
 use App\Models\SiteSetting;
 use App\Models\Transaction;
+use App\Models\YearlyClearance;
+use App\Models\YearlyClearancePartner;
 use App\Observers\ActivityLogObserver;
 use Illuminate\Support\ServiceProvider;
 
@@ -47,6 +49,8 @@ class AppServiceProvider extends ServiceProvider
             ProfitDistribution::class,
             SiteSetting::class,
             SiteService::class,
+            YearlyClearance::class,
+            YearlyClearancePartner::class,
         ];
 
         foreach ($trackableModels as $model) {

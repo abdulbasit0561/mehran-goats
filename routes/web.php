@@ -20,6 +20,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SyncController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\YearlyClearanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -155,6 +156,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/investors', [ReportController::class, 'investorIndex'])->name('reports.investors');
     Route::get('/reports/investor/{investor}', [ReportController::class, 'investorStatement'])->name('reports.investor');
     Route::get('/reports/investor/{investor}/csv', [ReportController::class, 'investorCsv'])->name('reports.investor.csv');
+
+    // Yearly Clearance (annual settlement)
+    Route::get('/reports/yearly-clearance', [YearlyClearanceController::class, 'index'])->name('reports.yearly-clearance.index');
+    Route::get('/reports/yearly-clearance/report', [YearlyClearanceController::class, 'report'])->name('reports.yearly-clearance.report');
+    Route::post('/reports/yearly-clearance/complete', [YearlyClearanceController::class, 'complete'])->name('reports.yearly-clearance.complete');
+    Route::get('/reports/yearly-clearance/{clearance}', [YearlyClearanceController::class, 'show'])->name('reports.yearly-clearance.show');
+    Route::get('/reports/yearly-clearance/{clearance}/csv', [YearlyClearanceController::class, 'csv'])->name('reports.yearly-clearance.csv');
+    Route::get('/reports/yearly-clearance/{clearance}/pdf', [YearlyClearanceController::class, 'pdf'])->name('reports.yearly-clearance.pdf');
 
     // Activity Logs (super admin only)
     Route::middleware('super_admin')->group(function () {
