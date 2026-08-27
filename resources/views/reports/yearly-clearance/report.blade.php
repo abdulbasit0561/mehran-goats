@@ -65,7 +65,7 @@
                         <p class="text-sm text-gray-700">
                             This year was closed on <strong>{{ $report['completed']->completed_at?->format('M d, Y H:i') }}</strong>
                             by <strong>{{ $report['completed']->completer?->name ?? 'Unknown' }}</strong>.
-                            The report below is the historical snapshot. Figures below are live-calculated for reference.
+                            The report below is the live-calculated view; the frozen snapshot lives in the completion entry.
                         </p>
                     @else
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500 text-white">DRAFT — FOR REVIEW</span>
@@ -74,6 +74,11 @@
                         </p>
                     @endif
                 </div>
+                @if ($year > now()->year)
+                    <p class="mt-2 text-xs text-amber-800">
+                        ⚠️ FY {{ $year }} is a future year — figures are partial or empty. Completing it now freezes an incomplete record you cannot undo.
+                    </p>
+                @endif
             </div>
 
             {{-- KPI cards --}}

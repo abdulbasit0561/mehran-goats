@@ -123,18 +123,29 @@ class YearlyClearanceTest extends TestCase
 
     public function test_opening_balance_chains_from_previous_year_clearance(): void
     {
-        // Complete 2025 first: Ali final = 6000 capital + 2100 profit share, Sara = 4000 + 1400
+        // Complete 2025 first — WITH an Ali withdrawal in 2025 so the chained
+        // opening (via final_balance) differs from the fallback formula
+        // (capitalBefore + share of pre-year profit = 8100 / 5400 without it).
+        Transaction::create(['type' => 'income', 'category' => 'Other Income', 'amount' => 1000, 'date' => '2025-11-01', 'investor_id' => $this->ali->id]);
         $this->post('/reports/yearly-clearance/complete', ['year' => 2025]);
+
+        // 2025 net profit = 5000 + 1000 - 1500 = 4500 → Ali share 2700, Sara 1800
+        // Ali final  = 6000 + 2700 - 1000 withdrawal = 7700 (≠ fallback 6000 + 4500*0.6 = 8700)
+        // Sara final = 4000 + 1800            = 5800 (≠ fallback 4000 + 4500*0.4 = 5800? = 5800 — same, but Ali discriminates)
+        $this->assertDatabaseHas('yearly_clearance_partners', ['investor_id' => $this->ali->id, 'final_balance' => 7700]);
+        $this->assertDatabaseHas('yearly_clearance_partners', ['investor_id' => $this->sara->id, 'final_balance' => 5800]);
 
         // 2026 data
         Transaction::create(['type' => 'income', 'category' => 'Goat Sales', 'amount' => 900, 'date' => '2026-08-01']);
 
         $report = app(YearlyClearanceService::class)->buildReport(2026);
 
+        // 2026 openings MUST equal 2025 final balances (chained), not the fallback values
         $aliLine = collect($report['partners'])->firstWhere('investor_id', $this->ali->id);
-        $this->assertEqualsWithDelta(8100.0, (float) $aliLine['opening_balance'], 0.01);
+        $this->assertEqualsWithDelta(7700.0, (float) $aliLine['opening_balance'], 0.01,
+            'Opening must chain from previous clearance final_balance (7700), not the fallback formula (8700)');
         $saraLine = collect($report['partners'])->firstWhere('investor_id', $this->sara->id);
-        $this->assertEqualsWithDelta(5400.0, (float) $saraLine['opening_balance'], 0.01);
+        $this->assertEqualsWithDelta(5800.0, (float) $saraLine['opening_balance'], 0.01);
     }
 
     public function test_completing_year_twice_is_blocked(): void
