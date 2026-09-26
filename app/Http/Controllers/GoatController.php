@@ -8,6 +8,7 @@ use App\Models\Caretaker;
 use App\Models\DeathRecord;
 use App\Models\Goat;
 use App\Models\GoatImage;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -243,6 +244,28 @@ class GoatController extends Controller
         }
 
         $goat->update($validated);
+
+        // When a goat is marked sold with a sale price, create the matching
+        // "Goat Sales" income transaction so revenue reports stay accurate.
+        if ($goat->status === 'sold' && (float) $goat->sale_price > 0) {
+            $hasSaleTx = $goat->transactions()
+                ->where('type', 'income')
+                ->where('category', 'Goat Sales')
+                ->exists();
+
+            if (! $hasSaleTx) {
+                Transaction::create([
+                    'type'           => 'income',
+                    'category'       => 'Goat Sales',
+                    'amount'         => $goat->sale_price,
+                    'date'           => $goat->sale_date ?? now(),
+                    'goat_id'        => $goat->id,
+                    'investor_id'    => null,
+                    'payment_method' => 'cash',
+                    'notes'          => 'Sale of goat ' . $goat->tag_id,
+                ]);
+            }
+        }
 
         // Sync new profile photo into the gallery
         if (isset($validated['photo'])) {

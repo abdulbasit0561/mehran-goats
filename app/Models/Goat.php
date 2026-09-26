@@ -60,6 +60,12 @@ class Goat extends Model
         return $this->hasMany(OwnershipUnit::class);
     }
 
+    /** Financial transactions linked to this goat (purchases, sales, etc.). */
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
     /** The death record for this goat (one-to-one; a goat can only die once). */
     public function deathRecord(): HasOne
     {

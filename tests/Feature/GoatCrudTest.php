@@ -89,6 +89,64 @@ class GoatCrudTest extends TestCase
         $this->assertDatabaseHas('goats', ['id' => $goat->id, 'status' => 'breeder']);
     }
 
+    public function test_marking_goat_sold_creates_income_transaction(): void
+    {
+        $goat = Goat::create([
+            'tag_id'         => 'TAG-SOLD',
+            'breed_id'       => $this->breed->id,
+            'gender'         => 'male',
+            'status'         => 'kid',
+            'purchase_price' => 10000,
+        ]);
+
+        $this->put("/goats/{$goat->id}", [
+            'tag_id'         => 'TAG-SOLD',
+            'breed_id'       => $this->breed->id,
+            'gender'         => 'male',
+            'status'         => 'sold',
+            'sale_price'     => 18000,
+            'sale_date'      => now()->toDateString(),
+        ]);
+
+        $this->assertDatabaseHas('transactions', [
+            'type'     => 'income',
+            'category' => 'Goat Sales',
+            'amount'   => 18000,
+            'goat_id'  => $goat->id,
+        ]);
+    }
+
+    public function test_no_duplicate_sale_transaction_on_resave(): void
+    {
+        $goat = Goat::create([
+            'tag_id'         => 'TAG-DUP',
+            'breed_id'       => $this->breed->id,
+            'gender'         => 'male',
+            'status'         => 'sold',
+            'sale_price'     => 5000,
+            'sale_date'      => now(),
+            'purchase_price' => 3000,
+        ]);
+
+        Transaction::create([
+            'type' => 'income', 'category' => 'Goat Sales', 'amount' => 5000,
+            'date' => now(), 'goat_id' => $goat->id, 'payment_method' => 'cash',
+        ]);
+
+        $this->put("/goats/{$goat->id}", [
+            'tag_id'     => 'TAG-DUP',
+            'breed_id'   => $this->breed->id,
+            'gender'     => 'male',
+            'status'     => 'sold',
+            'sale_price' => 5000,
+        ]);
+
+        $this->assertSame(
+            1,
+            Transaction::where('goat_id', $goat->id)->where('category', 'Goat Sales')->count()
+        );
+    }
+
     public function test_can_delete_a_goat(): void
     {
         $goat = Goat::create([
