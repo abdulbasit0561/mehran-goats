@@ -96,9 +96,22 @@ class TransactionAndProfitLossTest extends TestCase
         $response = $this->get('/reports/profit-loss?start=2026-06-01&end=2026-06-30');
 
         $response->assertStatus(200);
-        $response->assertSee('1,000.00');  // income
-        $response->assertSee('300.00');     // expense
-        $response->assertSee('700.00');     // net
+        $response->assertSee('1,000');  // income (PKR cards render whole numbers)
+        $response->assertSee('300');    // expense
+        $response->assertSee('700');    // net
+    }
+
+    public function test_profit_loss_defaults_to_current_year(): void
+    {
+        // Transaction in an earlier month of the current year must be visible
+        // without any explicit start/end params (regression: default was current
+        // month only, showing zeros in quiet months).
+        Transaction::create(['type' => 'income', 'category' => 'Sale', 'amount' => 5000, 'date' => now()->startOfYear()->addMonth()->toDateString()]);
+
+        $response = $this->get('/reports/profit-loss');
+
+        $response->assertStatus(200);
+        $response->assertSee('5,000');
     }
 
     public function test_investor_share_pct_calculation(): void
@@ -138,7 +151,7 @@ class TransactionAndProfitLossTest extends TestCase
             'end'   => '2026-06-30',
         ]);
 
-        $response->assertRedirect('/reports/profit-loss');
+        $response->assertRedirect(route('reports.profit-loss', ['start' => '2026-06-01', 'end' => '2026-06-30']));
 
         // Alice gets 75% of 1000 = 750, Bob gets 25% = 250
         $this->assertDatabaseHas('profit_distributions', [

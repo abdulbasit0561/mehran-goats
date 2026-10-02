@@ -18,8 +18,10 @@ class ReportController extends Controller
      */
     public function profitLoss(Request $request)
     {
-        $start = $request->get('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfMonth();
-        $end   = $request->get('end')   ? Carbon::parse($request->get('end'))->endOfDay()   : Carbon::now()->endOfMonth();
+        // Default range: full current year (not just current month) so the report
+        // shows real activity immediately instead of zeros in a quiet month.
+        $start = $request->get('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfYear();
+        $end   = $request->get('end')   ? Carbon::parse($request->get('end'))->endOfDay()   : Carbon::now()->endOfYear();
 
         $category = $request->get('category', '');
         $type     = $request->get('type', '');
@@ -186,8 +188,9 @@ class ReportController extends Controller
      */
     public function exportCsv(Request $request): StreamedResponse
     {
-        $start = $request->get('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfMonth();
-        $end   = $request->get('end')   ? Carbon::parse($request->get('end'))->endOfDay()   : Carbon::now()->endOfMonth();
+        // Keep the export's default range in sync with profitLoss().
+        $start = $request->get('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfYear();
+        $end   = $request->get('end')   ? Carbon::parse($request->get('end'))->endOfDay()   : Carbon::now()->endOfYear();
         $category = $request->get('category', '');
         $type     = $request->get('type', '');
 
@@ -248,8 +251,9 @@ class ReportController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $start = $request->get('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfMonth();
-        $end   = $request->get('end')   ? Carbon::parse($request->get('end'))->endOfDay()   : Carbon::now()->endOfMonth();
+        // Keep the export's default range in sync with profitLoss().
+        $start = $request->get('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfYear();
+        $end   = $request->get('end')   ? Carbon::parse($request->get('end'))->endOfDay()   : Carbon::now()->endOfYear();
         $category = $request->get('category', '');
         $type     = $request->get('type', '');
 
