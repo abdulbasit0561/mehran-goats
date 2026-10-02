@@ -71,6 +71,9 @@
                                             <span class="text-xs font-medium" style="color: #16a34a;">Breeder</span>
                                         @elseif($goat->status === 'sold')
                                             <span class="text-xs font-medium text-gray-400">Sold</span>
+                                            @if($goat->sale)
+                                                <a href="{{ route('sales.show', $goat->sale) }}" class="text-xs text-indigo-600 hover:underline ml-1">→ sale</a>
+                                            @endif
                                         @elseif($goat->status === 'deceased')
                                             <span class="text-xs font-medium" style="color: #dc2626;">Deceased</span>
                                         @else

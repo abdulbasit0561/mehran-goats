@@ -66,6 +66,12 @@ class Goat extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    /** The sale record for this goat (one-to-one; a goat is sold once). */
+    public function sale(): HasOne
+    {
+        return $this->hasOne(Sale::class);
+    }
+
     /** The death record for this goat (one-to-one; a goat can only die once). */
     public function deathRecord(): HasOne
     {

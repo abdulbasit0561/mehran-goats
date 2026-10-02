@@ -7,8 +7,9 @@ use App\Http\Controllers\CmsController;
 use App\Http\Controllers\BreedingRecordController;
 use App\Http\Controllers\BudgetEntryController;
 use App\Http\Controllers\CaretakerController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ExchangeController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SaleController;
+use App\Http\Controllers\DashboardController;use App\Http\Controllers\ExchangeController;
 use App\Http\Controllers\GoatController;
 use App\Http\Controllers\GoatImageController;
 use App\Http\Controllers\HealthRecordController;
@@ -88,6 +89,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/investments/quick-add', [InvestmentController::class, 'quickStore'])
         ->name('investments.quick-add');
 
+    // Customers / buyers (full resource)
+    Route::get('/customers/data', [CustomerController::class, 'data'])->name('customers.data');
+    Route::resource('customers', CustomerController::class);
+
+    // Sales (full resource)
+    Route::get('/sales/data', [SaleController::class, 'data'])->name('sales.data');
+    Route::post('/sales/{sale}/payments', [SaleController::class, 'recordPayment'])->name('sales.payments.store');
+    Route::delete('/sales/{sale}/payments/{payment}', [SaleController::class, 'deletePayment'])->name('sales.payments.destroy');
+    Route::resource('sales', SaleController::class);
+
     // Investors (full resource)
     Route::get('/investors/data', [InvestorController::class, 'data'])->name('investors.data');
     Route::resource('investors', InvestorController::class);
@@ -149,6 +160,9 @@ Route::middleware('auth')->group(function () {
 
     // Reports
     Route::get('/reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
+    Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('/reports/sales/csv', [ReportController::class, 'exportSalesCsv'])->name('reports.sales.csv');
+    Route::get('/reports/sales/pdf', [ReportController::class, 'exportSalesPdf'])->name('reports.sales.pdf');
     Route::get('/reports/profit-loss/csv', [ReportController::class, 'exportCsv'])->name('reports.profit-loss.csv');
     Route::get('/reports/profit-loss/pdf', [ReportController::class, 'exportPdf'])->name('reports.profit-loss.pdf');
     Route::post('/reports/distribute', [ReportController::class, 'distribute'])->name('reports.distribute');

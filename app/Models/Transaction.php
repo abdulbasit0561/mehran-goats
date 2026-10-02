@@ -18,8 +18,13 @@ class Transaction extends Model
 
     protected $fillable = [
         'type', 'category', 'amount', 'date', 'goat_id', 'investor_id',
-        'payment_method', 'is_recurring', 'budget_amount', 'notes',
+        'sale_id', 'payment_method', 'is_recurring', 'budget_amount', 'notes',
     ];
+
+    public function sale(): BelongsTo
+    {
+        return $this->belongsTo(Sale::class);
+    }
 
     protected $casts = [
         'amount'       => 'decimal:2',

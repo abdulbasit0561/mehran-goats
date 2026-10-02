@@ -132,6 +132,60 @@
                 </div>
             </div>
 
+            {{-- Sale record (shown only when one exists) --}}
+            @if ($goat->sale)
+                @php $sale = $goat->sale->load('customer', 'seller'); @endphp
+                <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h3 class="font-semibold text-gray-900">💰 Sale record</h3>
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="text-gray-500">Paid: <strong class="text-gray-900">{{ number_format($sale->paid_amount, 0) }}</strong></span>
+                            <span class="text-gray-500">Balance: <strong class="{{ $sale->balance_due > 0 ? 'text-amber-600' : 'text-green-600' }}">{{ number_format($sale->balance_due, 0) }}</strong></span>
+                            @if ($sale->status === 'paid')
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>
+                            @elseif ($sale->status === 'partial')
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Partial</span>
+                            @else
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Unpaid</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <dl class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                        <div>
+                            <dt class="text-xs text-gray-500 uppercase">Sold on</dt>
+                            <dd class="mt-1">{{ $sale->sale_date->format('M d, Y') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-gray-500 uppercase">Buyer</dt>
+                            <dd class="mt-1">
+                                @if ($sale->customer)
+                                    <a href="{{ route('customers.show', $sale->customer) }}" class="text-indigo-600 hover:underline">{{ $sale->customer->name }}</a>
+                                @else
+                                    <span class="text-gray-400">—</span>
+                                @endif
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-gray-500 uppercase">Sold by</dt>
+                            <dd class="mt-1">{{ $sale->seller?->name ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs text-gray-500 uppercase">Price</dt>
+                            <dd class="mt-1 font-bold text-gray-900">{{ number_format((float) $sale->sale_price, 0) }}</dd>
+                        </div>
+                    </dl>
+
+                    @if ($sale->photo_path)
+                        <a href="{{ Storage::url($sale->photo_path) }}" target="_blank" class="mt-4 inline-block">
+                            <img src="{{ Storage::url($sale->photo_path) }}" alt="Goat at sale" class="h-24 w-24 object-cover rounded-md border" />
+                        </a>
+                    @endif
+
+                    <a href="{{ route('sales.show', $sale) }}" class="mt-4 inline-block text-sm text-indigo-600 hover:underline">View full sale & payments →</a>
+                </div>
+            @endif
+
             {{-- Death record (shown only when one exists) --}}
             @if ($goat->deathRecord)
                 <div class="bg-white shadow-sm rounded-lg p-6 mb-6 border-l-4 border-gray-400">

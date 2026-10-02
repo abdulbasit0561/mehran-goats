@@ -18,7 +18,9 @@ class GoatController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Goat::with(['breed', 'birthedRecords' => function ($q) {
+        $query = Goat::with(['breed', 'sale' => function ($q) {
+            $q->select('id', 'goat_id');
+        }, 'birthedRecords' => function ($q) {
             $q->whereIn('pregnancy_status', ['bred', 'pregnant'])->latest('breeding_date');
         }]);
 
@@ -200,7 +202,7 @@ class GoatController extends Controller
 
     public function show(Goat $goat)
     {
-        $goat->load(['breed', 'caretaker', 'sire.breed', 'dam.breed', 'healthRecords', 'siredRecords.dam', 'birthedRecords.sire', 'birthedRecords.kids', 'ownershipUnits.investor', 'deathRecord', 'images']);
+        $goat->load(['breed', 'caretaker', 'sire.breed', 'dam.breed', 'healthRecords', 'siredRecords.dam', 'birthedRecords.sire', 'birthedRecords.kids', 'ownershipUnits.investor', 'deathRecord', 'images', 'sale.customer', 'sale.seller']);
 
         return view('goats.show', compact('goat'));
     }
@@ -245,24 +247,30 @@ class GoatController extends Controller
 
         $goat->update($validated);
 
-        // When a goat is marked sold with a sale price, create the matching
-        // "Goat Sales" income transaction so revenue reports stay accurate.
+        // When a goat is marked sold with a sale price, record the full sale
+        // (status + exactly one "Goat Sales" income transaction) through the
+        // shared SaleService. Buyer/seller are unknown on this legacy path.
         if ($goat->status === 'sold' && (float) $goat->sale_price > 0) {
-            $hasSaleTx = $goat->transactions()
-                ->where('type', 'income')
-                ->where('category', 'Goat Sales')
+            $existing = $goat->sale()
+                ->where('sale_price', $goat->sale_price)
+                ->where('sale_date', $goat->sale_date?->format('Y-m-d'))
                 ->exists();
 
-            if (! $hasSaleTx) {
-                Transaction::create([
-                    'type'           => 'income',
-                    'category'       => 'Goat Sales',
-                    'amount'         => $goat->sale_price,
-                    'date'           => $goat->sale_date ?? now(),
-                    'goat_id'        => $goat->id,
-                    'investor_id'    => null,
-                    'payment_method' => 'cash',
-                    'notes'          => 'Sale of goat ' . $goat->tag_id,
+            if (! $existing) {
+                app(\App\Services\SaleService::class)->recordSale($goat, [
+                    'customer_id'        => null,
+                    'seller_investor_id' => null,
+                    'sale_date'          => $goat->sale_date ?? now()->format('Y-m-d'),
+                    'sale_price'         => (float) $goat->sale_price,
+                    'sale_weight'        => $goat->sale_weight,
+                    'payment_method'     => 'cash',
+                    'notes'              => 'Marked sold via goat edit',
+                ]);
+            } else {
+                // Keep an existing sale's figures in sync with the goat edit.
+                $goat->sale()->update([
+                    'sale_price' => $goat->sale_price,
+                    'sale_date'  => $goat->sale_date,
                 ]);
             }
         }

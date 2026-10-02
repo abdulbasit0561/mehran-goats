@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Investor;
 use App\Models\ProfitDistribution;
+use App\Models\Sale;
 use App\Models\Transaction;
 use App\Services\ProfitDistributionService;
 use Carbon\Carbon;
@@ -351,5 +352,120 @@ class ReportController extends Controller
             }
             fclose($handle);
         }, 200, $headers);
+    }
+
+    /**
+     * Date-range sales report: revenue, cash received, outstanding, animals
+     * sold, gross profit vs purchase price. Sales counted by sale_date;
+     * cash received counted by payment_date within the range.
+     */
+    public function sales(Request $request)
+    {
+        [$start, $end] = $this->salesReportRange($request);
+
+        $sales = Sale::with(['goat', 'customer', 'seller', 'payments'])
+            ->whereBetween('sale_date', [$start->toDateString(), $end->toDateString()])
+            ->orderByDesc('sale_date')
+            ->get();
+
+        $stats = $this->salesReportStats($sales, $start, $end);
+
+        return view('reports.sales', array_merge(
+            compact('sales', 'start', 'end'),
+            $stats
+        ));
+    }
+
+    public function exportSalesCsv(Request $request): StreamedResponse
+    {
+        [$start, $end] = $this->salesReportRange($request);
+        [$sales, $stats] = $this->salesReportData($request);
+
+        $filename = "sales-report-{$start->format('Y-m-d')}-to-{$end->format('Y-m-d')}.csv";
+
+        return response()->stream(function () use ($sales, $stats, $start, $end) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Mehran Goats — Sales Report']);
+            fputcsv($handle, ["Period: {$start->format('M d, Y')} — {$end->format('M d, Y')}"]);
+            fputcsv($handle, []);
+            fputcsv($handle, ['SUMMARY']);
+            fputcsv($handle, ['Sales Revenue', number_format($stats['revenue'], 2)]);
+            fputcsv($handle, ['Cash Received', number_format($stats['received'], 2)]);
+            fputcsv($handle, ['Outstanding Balance', number_format($stats['outstanding'], 2)]);
+            fputcsv($handle, ['Animals Sold', $stats['count']]);
+            fputcsv($handle, ['Average Price', number_format($stats['avgPrice'], 2)]);
+            fputcsv($handle, ['Gross Profit', number_format($stats['grossProfit'], 2)]);
+            fputcsv($handle, []);
+
+            fputcsv($handle, ['SALES']);
+            fputcsv($handle, ['Date', 'Goat', 'Buyer', 'Seller', 'Price', 'Paid', 'Balance', 'Status', 'Purchase Price', 'Gross Profit']);
+            foreach ($sales as $sale) {
+                fputcsv($handle, [
+                    $sale->sale_date->format('Y-m-d'),
+                    $sale->goat?->tag_id ?? '—',
+                    $sale->customer?->name ?? '—',
+                    $sale->seller?->name ?? '—',
+                    $sale->sale_price,
+                    $sale->paid_amount,
+                    $sale->balance_due,
+                    $sale->status,
+                    $sale->goat?->purchase_price ?? 0,
+                    (float) $sale->sale_price - (float) ($sale->goat?->purchase_price ?? 0),
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function exportSalesPdf(Request $request)
+    {
+        [$start, $end] = $this->salesReportRange($request);
+        [$sales, $stats] = $this->salesReportData($request);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf.sales', array_merge(
+            compact('sales', 'start', 'end'),
+            $stats
+        ));
+
+        return $pdf->download("sales-report-{$start->format('Y-m-d')}-to-{$end->format('Y-m-d')}.pdf");
+    }
+
+    private function salesReportRange(Request $request): array
+    {
+        $start = $request->get('start') ? Carbon::parse($request->get('start'))->startOfDay() : Carbon::now()->startOfYear();
+        $end   = $request->get('end')   ? Carbon::parse($request->get('end'))->endOfDay()   : Carbon::now()->endOfYear();
+
+        return [$start, $end];
+    }
+
+    private function salesReportData(Request $request): array
+    {
+        [$start, $end] = $this->salesReportRange($request);
+
+        $sales = Sale::with(['goat', 'customer', 'seller', 'payments'])
+            ->whereBetween('sale_date', [$start->toDateString(), $end->toDateString()])
+            ->orderByDesc('sale_date')
+            ->get();
+
+        return [$sales, $this->salesReportStats($sales, $start, $end)];
+    }
+
+    private function salesReportStats($sales, Carbon $start, Carbon $end): array
+    {
+        $revenue    = (float) $sales->sum('sale_price');
+        $received   = (float) \App\Models\SalePayment::whereBetween('payment_date', [$start->toDateString(), $end->toDateString()])
+            ->whereIn('sale_id', $sales->pluck('id'))
+            ->sum('amount');
+        $outstanding = (float) $sales->sum(fn ($s) => $s->balance_due);
+        $count       = $sales->count();
+        $avgPrice    = $count > 0 ? $revenue / $count : 0;
+        $grossProfit = (float) $sales->sum(fn ($s) => (float) $s->sale_price - (float) ($s->goat?->purchase_price ?? 0));
+
+        return compact('revenue', 'received', 'outstanding', 'count', 'avgPrice', 'grossProfit');
     }
 }

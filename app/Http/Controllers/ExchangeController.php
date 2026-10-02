@@ -181,23 +181,16 @@ class ExchangeController extends Controller
         ) {
             $investorId = $validated['investor_id'] ?? null;
 
-            // --- Step 1: Mark outgoing goat as sold ---
-            $outgoingGoat->update([
-                'status'    => 'sold',
-                'sale_price'=> $outgoingValue,
-                'sale_date' => $validated['exchange_date'],
-            ]);
-
-            // --- Step 2: Income transaction for outgoing goat value ---
-            Transaction::create([
-                'type'           => 'income',
-                'category'       => 'Goat Sales',
-                'amount'         => $outgoingValue,
-                'date'           => $validated['exchange_date'],
-                'goat_id'        => $outgoingGoat->id,
-                'investor_id'    => $investorId,
-                'payment_method' => $paymentMethod,
-                'notes'          => 'Exchanged with ' . ($validated['counterparty'] ?? 'counterparty') . ' for incoming goat',
+            // --- Step 1+2: Mark outgoing goat sold + record the sale through
+            // the shared SaleService (one linked "Goat Sales" income tx) ---
+            app(\App\Services\SaleService::class)->recordSale($outgoingGoat, [
+                'customer_id'        => null,
+                'seller_investor_id' => $investorId,
+                'sale_date'          => $validated['exchange_date'],
+                'sale_price'         => $outgoingValue,
+                'sale_weight'        => null,
+                'payment_method'     => $paymentMethod,
+                'notes'              => 'Exchanged with ' . ($validated['counterparty'] ?? 'counterparty') . ' for incoming goat',
             ]);
 
             // --- Step 3: Create the new incoming goat ---
@@ -350,11 +343,15 @@ class ExchangeController extends Controller
             $outgoingGoat = $exchange->outgoingGoat;
             $incomingGoat = $exchange->incomingGoat;
 
-            // --- Update outgoing goat sale info ---
+            // --- Update outgoing goat sale info (+ linked sale record) ---
             if ($outgoingGoat) {
-                $outgoingGoat->update([
-                    'sale_price' => $outgoingValue,
-                    'sale_date'  => $validated['exchange_date'],
+                app(\App\Services\SaleService::class)->recordSale($outgoingGoat, [
+                    'customer_id'        => null,
+                    'seller_investor_id' => $investorId,
+                    'sale_date'          => $validated['exchange_date'],
+                    'sale_price'         => $outgoingValue,
+                    'payment_method'     => $paymentMethod,
+                    'notes'              => 'Exchanged with ' . ($validated['counterparty'] ?? 'counterparty') . ' for incoming goat',
                 ]);
             }
 
@@ -546,9 +543,19 @@ class ExchangeController extends Controller
             }
 
             // --- 3. Delete all transactions created by this exchange ---
-            // Goat Sales income (outgoing goat)
+            // Goat Sales income (outgoing goat) — via the linked Sale, if any
+            if ($exchange->outgoingGoat) {
+                $sale = $exchange->outgoingGoat->sale()->first();
+                if ($sale) {
+                    Transaction::where('sale_id', $sale->id)->delete();
+                    $sale->delete();
+                }
+            }
+
+            // Fallback for pre-sales-module exchanges (unlinked matching)
             Transaction::where('type', 'income')
                 ->where('category', 'Goat Sales')
+                ->whereNull('sale_id')
                 ->where('goat_id', $outgoingGoatId)
                 ->where('date', $exchangeDate)
                 ->delete();
