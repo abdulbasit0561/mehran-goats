@@ -55,6 +55,25 @@ class Goat extends Model
         return $this->hasMany(HealthRecord::class)->orderByDesc('date');
     }
 
+    /** Weight history entries for this goat (newest first). */
+    public function weightLogs(): HasMany
+    {
+        return $this->hasMany(WeightLog::class)->orderByDesc('logged_at');
+    }
+
+    /**
+     * Keep goats.weight_kg in sync with the most recent weight log.
+     * If no logs remain, the current weight is left unchanged.
+     */
+    public function syncWeightFromLogs(): void
+    {
+        $latest = $this->weightLogs()->first();
+
+        if ($latest) {
+            $this->forceFill(['weight_kg' => $latest->weight_kg])->save();
+        }
+    }
+
     public function ownershipUnits(): HasMany
     {
         return $this->hasMany(OwnershipUnit::class);

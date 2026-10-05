@@ -20,7 +20,10 @@ use App\Http\Controllers\OwnershipUnitController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SyncController;
+use App\Http\Controllers\AiInsightController;
+use App\Http\Controllers\FarmAiInsightController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\WeightLogController;
 use App\Http\Controllers\YearlyClearanceController;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +73,20 @@ Route::middleware('auth')->group(function () {
     Route::resource('goats.health-records', HealthRecordController::class)
         ->only(['index', 'create', 'store', 'destroy'])
         ->shallow();
+
+    // Weight history (nested store, shallow destroy)
+    Route::post('/goats/{goat}/weight-logs', [WeightLogController::class, 'store'])->name('goats.weight-logs.store');
+    Route::delete('/weight-logs/{weight_log}', [WeightLogController::class, 'destroy'])->name('goats.weight-logs.destroy');
+
+    // Per-goat AI health insights (JSON only)
+    Route::get('/goats/{goat}/ai-insights', [AiInsightController::class, 'index'])->name('goats.ai-insights.index');
+    Route::post('/goats/{goat}/ai-insights', [AiInsightController::class, 'store'])->name('goats.ai-insights.store');
+    Route::get('/goats/{goat}/ai-insights/latest', [AiInsightController::class, 'latest'])->name('goats.ai-insights.latest');
+
+    // Farm-level AI insights (autonomous agent page)
+    Route::get('/ai-insights', [FarmAiInsightController::class, 'index'])->name('farm.ai-insights.index');
+    Route::post('/ai-insights/run', [FarmAiInsightController::class, 'run'])->name('farm.ai-insights.run');
+    Route::get('/ai-insights/latest', [FarmAiInsightController::class, 'latest'])->name('farm.ai-insights.latest');
 
     Route::resource('goats.breeding-records', BreedingRecordController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])

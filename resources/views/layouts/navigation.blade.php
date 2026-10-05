@@ -88,6 +88,9 @@
                             <x-dropdown-link :href="route('reports.sales')" :active="request()->routeIs('reports.sales*')">
                                 {{ __('Sales Report') }}
                             </x-dropdown-link>
+                            <x-dropdown-link :href="route('farm.ai-insights.index')" :active="request()->routeIs('farm.ai-insights.*')">
+                                {{ __('AI Insights') }}
+                            </x-dropdown-link>
                             <x-dropdown-link :href="route('reports.yearly-clearance.index')" :active="request()->routeIs('reports.yearly-clearance*')">
                                 {{ __('Yearly Clearance') }}
                             </x-dropdown-link>

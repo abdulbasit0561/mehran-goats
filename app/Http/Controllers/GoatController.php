@@ -204,7 +204,11 @@ class GoatController extends Controller
     {
         $goat->load(['breed', 'caretaker', 'sire.breed', 'dam.breed', 'healthRecords', 'siredRecords.dam', 'birthedRecords.sire', 'birthedRecords.kids', 'ownershipUnits.investor', 'deathRecord', 'images', 'sale.customer', 'sale.seller']);
 
-        return view('goats.show', compact('goat'));
+        $aiLatest = \App\Models\AiAnalysis::where('goat_id', $goat->id)
+            ->orderByDesc('generated_at')
+            ->first();
+
+        return view('goats.show', compact('goat', 'aiLatest'));
     }
 
     public function edit(Goat $goat)

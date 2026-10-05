@@ -23,17 +23,29 @@ class HealthRecordController extends Controller
     public function store(Request $request, Goat $goat)
     {
         $validated = $request->validate([
-            'type'  => ['required', 'in:vaccination,treatment,checkup,other'],
-            'date'  => ['required', 'date', 'before_or_equal:today'],
-            'cost'  => ['nullable', 'numeric', 'min:0'],
-            'notes' => ['nullable', 'string'],
+            'type'         => ['required', 'in:vaccination,treatment,checkup,other'],
+            'date'         => ['required', 'date', 'before_or_equal:today'],
+            'cost'         => ['nullable', 'numeric', 'min:0'],
+            'notes'        => ['nullable', 'string'],
+            'symptoms'     => ['nullable', 'string', 'max:2000'],
+            'diagnosis'    => ['nullable', 'string', 'max:255'],
+            'medication'   => ['nullable', 'string', 'max:255'],
+            'dosage'       => ['nullable', 'string', 'max:255'],
+            'vet_name'     => ['nullable', 'string', 'max:255'],
+            'vaccine_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         $goat->healthRecords()->create([
-            'type'  => $validated['type'],
-            'date'  => $validated['date'],
-            'cost'  => $validated['cost'] ?? 0,
-            'notes' => $validated['notes'] ?? null,
+            'type'         => $validated['type'],
+            'date'         => $validated['date'],
+            'cost'         => $validated['cost'] ?? 0,
+            'notes'        => $validated['notes'] ?? null,
+            'symptoms'     => $validated['symptoms'] ?? null,
+            'diagnosis'    => $validated['diagnosis'] ?? null,
+            'medication'   => $validated['medication'] ?? null,
+            'dosage'       => $validated['dosage'] ?? null,
+            'vet_name'     => $validated['vet_name'] ?? null,
+            'vaccine_name' => $validated['vaccine_name'] ?? null,
         ]);
 
         return redirect()

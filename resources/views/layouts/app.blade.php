@@ -52,6 +52,7 @@
                     'customers.index' => 'Buyers',
                     'customers.create' => 'Add Buyer',
                     'customers.show' => 'Buyer Details',
+                    'farm.ai-insights.index' => 'AI Insights',
                     'customers.edit' => 'Edit Buyer',
                     'sales.index' => 'Sales',
                     'sales.create' => 'Record Sale',
@@ -197,6 +198,12 @@
             <a href="{{ route('reports.profit-loss') }}" class="{{ request()->routeIs('reports.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 <span>Reports</span>
+            </a>
+
+            {{-- AI Insights --}}
+            <a href="{{ route('farm.ai-insights.index') }}" class="{{ request()->routeIs('farm.ai-insights.*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>AI</span>
             </a>
 
             {{-- More (opens slide-up sheet via Alpine store) --}}

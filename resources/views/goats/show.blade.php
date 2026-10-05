@@ -330,6 +330,130 @@
             {{-- ====== END IMAGE GALLERY ====== --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
+                <!-- AI health insights -->
+                <div class="bg-white shadow-sm rounded-lg p-4 sm:p-6" x-data="aiInsights({
+                    latest: @js($aiLatest ? [
+                        'generated_at' => $aiLatest->generated_at->toIso8601String(),
+                        'model' => $aiLatest->model,
+                        'insights' => $aiLatest->insights ?? [],
+                        'suggestions' => $aiLatest->suggestions ?? [],
+                    ] : null),
+                    url: '{{ route('goats.ai-insights.store', $goat) }}',
+                    pollUrl: '{{ route('goats.ai-insights.latest', $goat) }}'
+                })">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                            AI Health Insights
+                            <span class="text-[10px] font-semibold uppercase bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">AI</span>
+                        </h3>
+                        <button @click="generate()" :disabled="loading"
+                                class="text-xs px-3 py-1.5 rounded-md font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+                            <svg x-show="loading" class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                            </svg>
+                            <span x-text="loading ? 'Analyzing…' : (latest ? 'Regenerate' : 'Generate AI Insights')"></span>
+                        </button>
+                    </div>
+
+                    <template x-if="error">
+                        <div class="mb-3">
+                            <div class="flex items-start gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                                <p x-text="error" class="flex-1"></p>
+                            </div>
+                            <button @click="generate()" class="mt-2 text-xs text-indigo-600 hover:underline">Try again</button>
+                        </div>
+                    </template>
+
+                    <template x-if="loading && !latest">
+                        <div class="text-sm text-gray-400 py-6 text-center">Analyzing {{ $goat->tag_id }}'s health records…</div>
+                    </template>
+
+                    <template x-if="latest">
+                        <div>
+                            <div class="mb-3">
+                                <x-ai-disclaimer />
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-400 mb-3">
+                                <span x-text="'Generated ' + new Date(latest.generated_at).toLocaleString()"></span>
+                                <span x-show="latest.model" x-text="'· ' + latest.model"></span>
+                            </div>
+
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Insights</p>
+                            <div class="space-y-2 mb-4">
+                                <template x-for="(insight, i) in latest.insights" :key="i">
+                                    <div class="border-l-2 pl-3 py-1" :class="{
+                                        'border-red-400': insight.severity === 'alert',
+                                        'border-amber-400': insight.severity === 'warning',
+                                        'border-indigo-200': insight.severity === 'info' || !insight.severity,
+                                    }">
+                                        <p class="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                            <span x-text="insight.title"></span>
+                                            <span x-show="insight.severity === 'alert'" class="text-[10px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Alert</span>
+                                            <span x-show="insight.severity === 'warning'" class="text-[10px] font-bold uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Warning</span>
+                                        </p>
+                                        <p class="text-xs text-gray-600 mt-0.5" x-text="insight.detail"></p>
+                                    </div>
+                                </template>
+                                <p x-show="!latest.insights.length" class="text-xs text-gray-400">No insights returned.</p>
+                            </div>
+
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Care suggestions</p>
+                            <div class="space-y-2">
+                                <template x-for="(s, i) in latest.suggestions" :key="i">
+                                    <div class="bg-green-50 border border-green-100 rounded-md px-3 py-2">
+                                        <p class="text-sm font-medium text-gray-900" x-text="s.title"></p>
+                                        <p class="text-xs text-gray-600 mt-0.5" x-text="s.detail"></p>
+                                    </div>
+                                </template>
+                                <p x-show="!latest.suggestions.length" class="text-xs text-gray-400">No suggestions returned.</p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="!loading && !latest && !error">
+                        <div class="text-sm text-gray-400 py-4">
+                            Generate an AI analysis of this goat's weight history, health records and symptoms. Results are saved so you can compare over time.
+                        </div>
+                    </template>
+
+                    {{-- Previous AI reports (collapsible) --}}
+                    @php $aiHistory = $aiLatest ? \App\Models\AiAnalysis::where('goat_id', $goat->id)->orderByDesc('generated_at')->skip(1)->take(10)->get() : collect(); @endphp
+                    @if ($aiHistory->isNotEmpty())
+                        <div class="mt-5 pt-4 border-t border-gray-200" x-data="{ open: false }">
+                            <button @click="open = !open" class="text-xs text-indigo-600 hover:underline flex items-center gap-1">
+                                <span x-text="open ? '▾' : '▸'"></span> Previous AI reports ({{ $aiHistory->count() }})
+                            </button>
+                            <div x-show="open" x-cloak class="mt-3 space-y-3" style="[x-cloak]{display:none!important}">
+                                @foreach ($aiHistory as $old)
+                                    <details class="border border-gray-100 rounded-md">
+                                        <summary class="px-3 py-2 text-xs text-gray-600 cursor-pointer flex justify-between">
+                                            <span>{{ $old->generated_at->format('M d, Y g:i A') }}</span>
+                                            <span class="text-gray-400">
+                                                @php $sev = collect($old->insights ?? [])->countBy('severity'); @endphp
+                                                @if (($sev['alert'] ?? 0) > 0) <span class="text-red-600 font-medium">{{ $sev['alert'] }} alert</span> @endif
+                                                @if (($sev['warning'] ?? 0) > 0) <span class="text-amber-600 font-medium">{{ $sev['warning'] }} warning</span> @endif
+                                                <span>{{ ($sev['info'] ?? 0) + max(0, count($old->insights ?? []) - ($sev['alert'] ?? 0) - ($sev['warning'] ?? 0)) }} info</span>
+                                            </span>
+                                        </summary>
+                                        <div class="px-3 pb-3 space-y-1.5">
+                                            @foreach (($old->insights ?? []) as $ins)
+                                                <p class="text-xs">
+                                                    <span class="font-medium {{ ($ins['severity'] ?? 'info') === 'alert' ? 'text-red-600' : (($ins['severity'] ?? 'info') === 'warning' ? 'text-amber-600' : 'text-gray-800') }}">{{ $ins['title'] }}</span>
+                                                    — {{ $ins['detail'] }}
+                                                </p>
+                                            @endforeach
+                                            @foreach (($old->suggestions ?? []) as $s)
+                                                <p class="text-xs text-green-800">✓ {{ $s['title'] }} — {{ $s['detail'] }}</p>
+                                            @endforeach
+                                        </div>
+                                    </details>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
                 <!-- Health records -->
                 <div class="bg-white shadow-sm rounded-lg p-4 sm:p-6">
                     <div class="flex justify-between items-center mb-4">
@@ -338,11 +462,31 @@
                     </div>
                     <div class="space-y-3">
                         @forelse ($goat->healthRecords as $record)
-                            <div class="border-l-2 border-indigo-200 pl-3">
+                            <div class="border-l-2 pl-3 {{ $record->type === 'treatment' ? 'border-red-300' : ($record->type === 'vaccination' ? 'border-green-300' : 'border-indigo-200') }}">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="text-sm font-medium text-gray-900 capitalize">{{ $record->type }}</p>
+                                        <p class="text-sm font-medium text-gray-900 capitalize">
+                                            {{ $record->type }}
+                                            @if ($record->vaccine_name)
+                                                <span class="text-xs font-normal text-green-700">· {{ $record->vaccine_name }}</span>
+                                            @endif
+                                        </p>
                                         <p class="text-xs text-gray-500">{{ $record->date->format('M d, Y') }} · {{ number_format($record->cost, 2) }}</p>
+                                        @if ($record->symptoms)
+                                            <p class="text-xs text-gray-700 mt-1"><span class="font-medium">Symptoms:</span> {{ $record->symptoms }}</p>
+                                        @endif
+                                        @if ($record->diagnosis)
+                                            <p class="text-xs text-gray-700 mt-0.5"><span class="font-medium">Diagnosis:</span> {{ $record->diagnosis }}</p>
+                                        @endif
+                                        @if ($record->medication)
+                                            <p class="text-xs text-gray-700 mt-0.5">
+                                                <span class="font-medium">Medication:</span> {{ $record->medication }}
+                                                @if ($record->dosage)<span class="text-gray-500">({{ $record->dosage }})</span>@endif
+                                            </p>
+                                        @endif
+                                        @if ($record->vet_name)
+                                            <p class="text-xs text-gray-500 mt-0.5">Vet: {{ $record->vet_name }}</p>
+                                        @endif
                                         @if ($record->notes) <p class="text-xs text-gray-600 mt-1">{{ $record->notes }}</p> @endif
                                     </div>
                                     <form method="POST" action="{{ route('health-records.destroy', $record) }}" onsubmit="return confirm('Delete record?')">
@@ -355,6 +499,89 @@
                             <p class="text-sm text-gray-400">No health records.</p>
                         @endforelse
                     </div>
+                </div>
+
+                <!-- Weight history -->
+                <div class="bg-white shadow-sm rounded-lg p-4 sm:p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4">Weight History</h3>
+
+                    @php $weightLogs = $goat->weightLogs()->get(); @endphp
+
+                    {{-- Quick record form --}}
+                    <form method="POST" action="{{ route('goats.weight-logs.store', $goat) }}" class="mb-4 flex flex-wrap gap-2 items-end">
+                        @csrf
+                        <div class="flex-1 min-w-[110px]">
+                            <label class="text-xs text-gray-500 uppercase">Weight (kg) *</label>
+                            <input name="weight_kg" type="number" step="0.01" min="0.01" max="300" required
+                                   placeholder="e.g. 42.5"
+                                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+                            @error('weight_kg') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="flex-1 min-w-[130px]">
+                            <label class="text-xs text-gray-500 uppercase">Date</label>
+                            <input name="logged_at" type="date" value="{{ old('logged_at', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}"
+                                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+                        </div>
+                        <div class="flex-1 min-w-[110px]">
+                            <label class="text-xs text-gray-500 uppercase">Note</label>
+                            <input name="notes" type="text" maxlength="1000" placeholder="Optional"
+                                   class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+                        </div>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 whitespace-nowrap">Record</button>
+                    </form>
+
+                    @if ($weightLogs->count())
+                        {{-- Inline SVG sparkline (oldest → newest) --}}
+                        @php
+                            $series = $weightLogs->sortBy('logged_at')->values();
+                            $minW = (float) $series->min('weight_kg');
+                            $maxW = (float) $series->max('weight_kg');
+                            $rangeW = max($maxW - $minW, 0.01);
+                            $w = 260; $h = 60; $pad = 4;
+                            $points = $series->map(function ($log, $i) use ($series, $minW, $rangeW, $w, $h, $pad) {
+                                $x = $series->count() > 1 ? $pad + ($i / ($series->count() - 1)) * ($w - 2 * $pad) : $w / 2;
+                                $y = $h - $pad - (((float) $log->weight_kg - $minW) / $rangeW) * ($h - 2 * $pad);
+                                return round($x, 1) . ',' . round($y, 1);
+                            });
+                        @endphp
+                        <svg viewBox="0 0 {{ $w }} {{ $h }}" class="w-full h-14 mb-3" role="img" aria-label="Weight trend">
+                            <polyline fill="none" stroke="currentColor" class="text-indigo-400" stroke-width="2"
+                                      points="{{ $points->implode(' ') }}" />
+                            @foreach ($points as $i => $p)
+                                @php [$cx, $cy] = explode(',', $p); @endphp
+                                <circle cx="{{ $cx }}" cy="{{ $cy }}" r="2.5" class="fill-indigo-500" />
+                            @endforeach
+                        </svg>
+
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
+                            @foreach ($weightLogs as $log)
+                                <div class="flex justify-between items-start text-sm border-b border-gray-100 pb-1.5">
+                                    <div>
+                                        <span class="font-medium text-gray-900">{{ number_format((float) $log->weight_kg, 2) }} kg</span>
+                                        <span class="text-xs text-gray-500 ml-2">{{ $log->logged_at->format('M d, Y') }}</span>
+                                        @if ($log->notes) <span class="text-xs text-gray-400 ml-1">· {{ $log->notes }}</span> @endif
+                                    </div>
+                                    <form method="POST" action="{{ route('goats.weight-logs.destroy', $log) }}" onsubmit="return confirm('Delete this weight entry?')">
+                                        @csrf @method('DELETE')
+                                        <button class="text-red-500 text-xs">×</button>
+                                    </form>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @if ($weightLogs->count() >= 2)
+                            @php
+                                $first = (float) $series->first()->weight_kg;
+                                $last = (float) $series->last()->weight_kg;
+                                $delta = round($last - $first, 2);
+                            @endphp
+                            <p class="text-xs mt-2 {{ $delta >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $delta >= 0 ? '▲' : '▼' }} {{ number_format(abs($delta), 2) }} kg since first record
+                            </p>
+                        @endif
+                    @else
+                        <p class="text-sm text-gray-400">No weight entries yet — record the first one above.</p>
+                    @endif
                 </div>
 
                 <!-- Breeding records -->
@@ -544,6 +771,73 @@
                 if (e.key === 'Escape') {
                     closeLightbox();
                 }
+            });
+        </script>
+    @endpush
+    @push('scripts')
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('aiInsights', ({ latest, url, pollUrl }) => ({
+                    latest: latest,
+                    loading: false,
+                    error: '',
+                    pollTimer: null,
+                    pollSince: 0,
+
+                    generate() {
+                        this.loading = true;
+                        this.error = '';
+                        this.pollSince = Date.now();
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                                'Accept': 'application/json',
+                            },
+                        })
+                            .then(r => {
+                                if (r.status === 503) throw new Error('AI is not configured on this system. Please contact the administrator.');
+                                if (!r.ok) throw new Error('AI service is temporarily unavailable. Please try again.');
+                                return r.json();
+                            })
+                            .then(data => {
+                                // Server already has a fresh (<2 min) analysis — show it immediately
+                                if (data.status === 'debounced' && data.analysis) {
+                                    this.latest = data.analysis;
+                                    this.loading = false;
+                                    return;
+                                }
+                                this.startPolling();
+                            })
+                            .catch(e => {
+                                this.loading = false;
+                                this.error = (e && e.message) || 'AI service is temporarily unavailable. Please try again.';
+                            });
+                    },
+
+                    startPolling() {
+                        clearInterval(this.pollTimer);
+                        this.pollTimer = setInterval(() => {
+                            fetch(pollUrl, { headers: { 'Accept': 'application/json' } })
+                                .then(r => r.ok ? r.json() : Promise.reject())
+                                .then(data => {
+                                    if (data.status === 'ready' && data.generated_at && new Date(data.generated_at).getTime() >= this.pollSince - 5000) {
+                                        clearInterval(this.pollTimer);
+                                        this.latest = data;
+                                        this.loading = false;
+                                    }
+                                    if (Date.now() - this.pollSince > 180000) {
+                                        clearInterval(this.pollTimer);
+                                        this.loading = false;
+                                        if (!this.latest) this.error = 'The analysis is taking longer than expected. Please try again.';
+                                    }
+                                })
+                                .catch(() => {});
+                        }, 3000);
+                    },
+                }));
             });
         </script>
     @endpush

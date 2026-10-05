@@ -10,7 +10,10 @@ class HealthRecord extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['goat_id', 'type', 'date', 'cost', 'notes'];
+    protected $fillable = [
+        'goat_id', 'type', 'date', 'cost', 'notes',
+        'symptoms', 'diagnosis', 'medication', 'dosage', 'vet_name', 'vaccine_name',
+    ];
 
     protected $casts = [
         'date' => 'date',

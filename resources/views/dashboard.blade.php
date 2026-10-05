@@ -53,6 +53,61 @@
             <div x-show="tab === 'overview'" x-transition.opacity.duration.150ms>
 
             {{-- ============================================================= --}}
+            {{-- AI INSIGHTS & ALERTS PANEL                                     --}}
+            {{-- ============================================================= --}}
+            <div class="bg-white shadow-sm rounded-lg p-4 sm:p-5 mb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-gray-900 text-sm sm:text-base flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        AI Insights &amp; Alerts
+                        <span class="text-[10px] font-semibold uppercase bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">AI</span>
+                    </h3>
+                    <a href="{{ route('farm.ai-insights.index') }}" class="text-xs text-indigo-600 hover:underline">View full report →</a>
+                </div>
+
+                @php
+                    $aiLatestFarm = \App\Models\AiAnalysis::farm()->latestFirst()->first();
+                    $aiRuleAlerts = app(\App\Services\Ai\RuleBasedAlertService::class)->alerts();
+                @endphp
+
+                <div class="space-y-1.5">
+                    @foreach ($aiRuleAlerts->take(5) as $ra)
+                        <div class="flex items-start gap-2 text-xs {{ ($ra['severity'] ?? 'warning') === 'alert' ? 'text-red-700' : 'text-amber-700' }}">
+                            <span class="font-medium">{{ ($ra['severity'] ?? 'warning') === 'alert' ? '●' : '▲' }}</span>
+                            <p class="flex-1"><span class="font-medium">{{ $ra['title'] }}:</span> <span class="text-gray-600">{{ $ra['detail'] }}</span></p>
+                        </div>
+                    @endforeach
+                    @if ($aiLatestFarm)
+                        @foreach (collect($aiLatestFarm->alerts ?? [])->take(3) as $a)
+                            <div class="flex items-start gap-2 text-xs {{ ($a['severity'] ?? 'info') === 'alert' ? 'text-red-700' : (($a['severity'] ?? 'info') === 'warning' ? 'text-amber-700' : 'text-gray-700') }}">
+                                <span class="text-[10px] font-bold uppercase bg-gray-100 text-gray-500 px-1 py-0.5 rounded self-start">AI</span>
+                                <p class="flex-1"><span class="font-medium">{{ $a['title'] }}:</span> <span class="text-gray-600">{{ $a['detail'] }}</span></p>
+                            </div>
+                        @endforeach
+                    @endif
+                    @if ($aiRuleAlerts->isEmpty() && collect($aiLatestFarm->alerts ?? [])->isEmpty())
+                        <p class="text-xs text-green-700">✓ No active alerts.</p>
+                    @endif
+                </div>
+
+                @if ($aiLatestFarm)
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <p class="text-xs text-gray-600">{{ collect($aiLatestFarm->insights ?? [])->first()['detail'] ?? '' }}</p>
+                        <p class="text-[10px] text-gray-400 mt-1.5">Latest herd report: {{ $aiLatestFarm->generated_at->format('M d, g:i A') }} ·
+                            <a href="{{ route('farm.ai-insights.index') }}" class="text-indigo-600 hover:underline">open report</a></p>
+                    </div>
+                @else
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <p class="text-xs text-gray-400">No AI herd report yet — <a href="{{ route('farm.ai-insights.index') }}" class="text-indigo-600 hover:underline">generate the first one</a>.</p>
+                    </div>
+                @endif
+
+                <div class="mt-3">
+                    <x-ai-disclaimer compact />
+                </div>
+            </div>
+
+            {{-- ============================================================= --}}
             {{-- MOBILE: TOTAL CAPITAL HERO                                     --}}
             {{-- ============================================================= --}}
             <div class="mobile-only mg-hero mb-3">
