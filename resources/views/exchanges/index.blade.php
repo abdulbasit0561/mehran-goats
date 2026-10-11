@@ -83,7 +83,7 @@
                             @endif
                         </a>
                         <a href="{{ route('exchanges.edit', $exchange) }}" class="absolute top-2 right-2 text-indigo-600 hover:text-indigo-800 text-xs">✏️</a>
-                        <form method="POST" action="{{ route('exchanges.destroy', $exchange) }}" class="absolute top-2 right-8" onsubmit="return confirm('Delete this exchange? All related records will be removed.');">
+                        <form method="POST" action="{{ route('exchanges.destroy', $exchange) }}" class="absolute top-2 right-8" data-confirm="Delete this exchange? All related records will be removed.">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-800 text-xs">🗑</button>

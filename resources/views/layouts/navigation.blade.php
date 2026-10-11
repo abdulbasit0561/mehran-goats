@@ -1,254 +1,110 @@
-<nav x-data="{ open: false }" class="hidden sm:block bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu (desktop only) -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-logo size="h-9" textClass="text-lg" />
-                    </a>
-                </div>
-
-                <!-- Navigation Links -->
-                <div class="hidden space-x-2 sm:-my-px sm:ms-6 sm:flex items-center">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-
-                    {{-- Livestock dropdown --}}
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
-                                {{ request()->routeIs('goats.*') || request()->routeIs('breeds.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') ? 'text-indigo-600 border-indigo-400' : 'text-gray-500 hover:text-gray-700 border-transparent' }} border-b-2">
-                                {{ __('Livestock') }}
-                                <svg class="fill-current h-3 w-3 ms-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('goats.index')" :active="request()->routeIs('goats.*')">
-                                {{ __('Livestock') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('breeds.index')" :active="request()->routeIs('breeds.*')">
-                                {{ __('Breeds') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('breeding.index')" :active="request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*')">
-                                {{ __('Breeding') }}
-                            </x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-
-                    {{-- People dropdown --}}
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
-                                {{ request()->routeIs('investors.*') || request()->routeIs('caretakers.*') || request()->routeIs('customers.*') ? 'text-indigo-600 border-indigo-400' : 'text-gray-500 hover:text-gray-700 border-transparent' }} border-b-2">
-                                {{ __('People') }}
-                                <svg class="fill-current h-3 w-3 ms-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('investors.index')" :active="request()->routeIs('investors.*')">
-                                {{ __('Investors') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('caretakers.index')" :active="request()->routeIs('caretakers.*')">
-                                {{ __('Caretakers') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
-                                {{ __('Buyers') }}
-                            </x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-
-                    {{-- Financials dropdown --}}
-                    <x-dropdown align="left" width="48">
-                        <x-slot name="trigger">
-                            <button class="inline-flex items-center px-3 py-2 text-sm leading-5 font-medium rounded-md transition ease-in-out duration-150
-                                {{ request()->routeIs('transactions.*') || request()->routeIs('exchanges.*') || request()->routeIs('sales.*') || request()->routeIs('budget.*') || request()->routeIs('reports.*') ? 'text-indigo-600 border-indigo-400' : 'text-gray-500 hover:text-gray-700 border-transparent' }} border-b-2">
-                                {{ __('Financials') }}
-                                <svg class="fill-current h-3 w-3 ms-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <x-dropdown-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
-                                {{ __('Expenses') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('exchanges.index')" :active="request()->routeIs('exchanges.*')">
-                                {{ __('Exchange') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
-                                {{ __('Sales') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('budget.index')" :active="request()->routeIs('budget.*')">
-                                {{ __('Budget') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.profit-loss*')">
-                                {{ __('Profit & Loss') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('reports.sales')" :active="request()->routeIs('reports.sales*')">
-                                {{ __('Sales Report') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('farm.ai-insights.index')" :active="request()->routeIs('farm.ai-insights.*')">
-                                {{ __('AI Insights') }}
-                            </x-dropdown-link>
-                            <x-dropdown-link :href="route('reports.yearly-clearance.index')" :active="request()->routeIs('reports.yearly-clearance*')">
-                                {{ __('Yearly Clearance') }}
-                            </x-dropdown-link>
-                        </x-slot>
-                    </x-dropdown>
-
-                    {{-- Website CMS --}}
-                    <x-nav-link :href="route('cms.index')" :active="request()->routeIs('cms.*')">
-                        {{ __('Website') }}
-                    </x-nav-link>
-                </div>
-            </div>
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('instructions')">
-                            {{ __('Instructions') }}
-                        </x-dropdown-link>
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-                        @if (Auth::user()?->isSuperAdmin())
-                            <x-dropdown-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
-                                {{ __('Activity Logs') }}
-                            </x-dropdown-link>
-                        @endif
-
-                        <!-- Authentication -->
-                        <div class="border-t border-gray-100"></div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+{{-- Desktop sidebar. Mobile uses the app bar + bottom tabs in the layout. --}}
+<aside class="admin-sidebar" aria-label="Admin">
+    <div class="admin-brand">
+        <a href="{{ route('dashboard') }}" class="block">
+            <x-logo size="h-9" textClass="text-base" />
+        </a>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
+    <nav class="admin-nav">
+        <p class="side-label">Overview</p>
+        <a href="{{ route('dashboard') }}" class="side-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Dashboard
+        </a>
+        <a href="{{ route('farm.ai-insights.index') }}" class="side-link {{ request()->routeIs('farm.ai-insights.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            AI Insights
+        </a>
 
-            {{-- Livestock group --}}
-            <div class="px-4 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">Livestock</div>
-            <x-responsive-nav-link :href="route('goats.index')" :active="request()->routeIs('goats.*')">
-                {{ __('Livestock') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('breeds.index')" :active="request()->routeIs('breeds.*')">
-                {{ __('Breeds') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('breeding.index')" :active="request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*')">
-                {{ __('Breeding') }}
-            </x-responsive-nav-link>
+        <p class="side-label">Livestock</p>
+        <a href="{{ route('goats.index') }}" class="side-link {{ request()->routeIs('goats.*') && ! request()->routeIs('goats.breeding-records.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v8a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+            Herd
+        </a>
+        <a href="{{ route('breeds.index') }}" class="side-link {{ request()->routeIs('breeds.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            Breeds
+        </a>
+        <a href="{{ route('breeding.index') }}" class="side-link {{ request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('breeding-records.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            Breeding
+        </a>
 
-            {{-- People group --}}
-            <div class="px-4 py-1 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">People</div>
-            <x-responsive-nav-link :href="route('investors.index')" :active="request()->routeIs('investors.*')">
-                {{ __('Investors') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('caretakers.index')" :active="request()->routeIs('caretakers.*')">
-                {{ __('Caretakers') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')">
-                {{ __('Buyers') }}
-            </x-responsive-nav-link>
+        <p class="side-label">People</p>
+        <a href="{{ route('investors.index') }}" class="side-link {{ request()->routeIs('investors.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Investors
+        </a>
+        <a href="{{ route('caretakers.index') }}" class="side-link {{ request()->routeIs('caretakers.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            Caretakers
+        </a>
+        <a href="{{ route('customers.index') }}" class="side-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Buyers
+        </a>
 
-            {{-- Financials group --}}
-            <div class="px-4 py-1 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Financials</div>
-            <x-responsive-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
-                {{ __('Expenses') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('exchanges.index')" :active="request()->routeIs('exchanges.*')">
-                {{ __('Exchange') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('sales.index')" :active="request()->routeIs('sales.*')">
-                {{ __('Sales') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('budget.index')" :active="request()->routeIs('budget.*')">
-                {{ __('Budget') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('reports.profit-loss')" :active="request()->routeIs('reports.*')">
-                {{ __('Reports') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('reports.sales')" :active="request()->routeIs('reports.sales*')">
-                {{ __('Sales Report') }}
-            </x-responsive-nav-link>
+        <p class="side-label">Finance</p>
+        <a href="{{ route('transactions.index') }}" class="side-link {{ request()->routeIs('transactions.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            Expenses
+        </a>
+        <a href="{{ route('sales.index') }}" class="side-link {{ request()->routeIs('sales.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l2 2 4-4M7 4h10a2 2 0 012 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 012-2z"/></svg>
+            Sales
+        </a>
+        <a href="{{ route('exchanges.index') }}" class="side-link {{ request()->routeIs('exchanges.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            Exchanges
+        </a>
+        <a href="{{ route('budget.index') }}" class="side-link {{ request()->routeIs('budget.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Budget
+        </a>
 
-            <div class="border-t border-gray-200 my-2"></div>
+        <p class="side-label">Reports</p>
+        <a href="{{ route('reports.profit-loss') }}" class="side-link {{ request()->routeIs('reports.profit-loss*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            Profit &amp; Loss
+        </a>
+        <a href="{{ route('reports.sales') }}" class="side-link {{ request()->routeIs('reports.sales*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v16H4z"/></svg>
+            Sales Report
+        </a>
+        <a href="{{ route('reports.yearly-clearance.index') }}" class="side-link {{ request()->routeIs('reports.yearly-clearance*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Yearly Clearance
+        </a>
 
-            <x-responsive-nav-link :href="route('cms.index')" :active="request()->routeIs('cms.*')">
-                {{ __('Website') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('instructions')" :active="request()->routeIs('instructions')">
-                {{ __('Instructions') }}
-            </x-responsive-nav-link>
-            @if (Auth::user()?->isSuperAdmin())
-                <x-responsive-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
-                    {{ __('Activity Logs') }}
-                </x-responsive-nav-link>
-            @endif
-        </div>
+        <p class="side-label">Workspace</p>
+        <a href="{{ route('cms.index') }}" class="side-link {{ request()->routeIs('cms.*') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+            Website
+        </a>
+        <a href="{{ route('instructions') }}" class="side-link {{ request()->routeIs('instructions') ? 'active' : '' }}">
+            <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Guide
+        </a>
+        @if (Auth::user()?->isSuperAdmin())
+            <a href="{{ route('activity-logs.index') }}" class="side-link {{ request()->routeIs('activity-logs.*') ? 'active' : '' }}">
+                <svg class="side-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                Activity Logs
+            </a>
+        @endif
+    </nav>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
+    <div class="admin-side-foot">
+        <a href="{{ route('profile.edit') }}" class="side-user {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+            <span class="mg-avatar">{{ strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}</span>
+            <span class="min-w-0">
+                <span class="side-user-name">{{ Auth::user()->name }}</span>
+                <span class="side-user-mail">{{ Auth::user()->email }}</span>
+            </span>
+        </a>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="side-logout">Log out</button>
+        </form>
     </div>
-</nav>
+</aside>

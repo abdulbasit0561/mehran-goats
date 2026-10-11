@@ -73,7 +73,7 @@
                                     <td class="px-6 py-3 text-right font-medium text-green-600">{{ number_format($inv->amount, 2) }}</td>
                                     <td class="px-6 py-3 text-gray-500">{{ $inv->notes ?? '—' }}</td>
                                     <td class="px-6 py-3 text-center">
-                                        <form method="POST" action="{{ route('investments.destroy', $inv) }}" onsubmit="return confirm('Delete this investment?')">
+                                        <form method="POST" action="{{ route('investments.destroy', $inv) }}" data-confirm="Delete this investment?">
                                             @csrf @method('DELETE')
                                             <button class="text-red-600 text-xs hover:underline">Delete</button>
                                         </form>

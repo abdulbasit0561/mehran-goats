@@ -1,74 +1,183 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            📊 Dashboard
-        </h2>
-    </x-slot>
-
-    {{-- Chart.js --}}
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    @endpush
-
-    {{-- Chart data from controller --}}
-    @push('scripts')
         <script>
             window.__chartData = @json($chartData);
         </script>
     @endpush
 
-    <div class="py-6 sm:py-12 page-content" x-data="{ tab: 'overview' }">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner">
+    <div class="py-4 sm:py-8 page-content">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 page-content-inner space-y-4 sm:space-y-6">
 
-            {{-- Flash message --}}
             @if (session('success'))
-                <div class="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
-                    <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                <div class="rounded-xl bg-emerald-50 p-4 border border-emerald-200">
+                    <p class="text-sm font-medium text-emerald-800">{{ session('success') }}</p>
                 </div>
             @endif
 
-            {{-- ============================================================= --}}
-            {{-- TAB BAR                                                        --}}
-            {{-- ============================================================= --}}
-            <div class="mb-6 border-b border-gray-200">
-                <div class="flex gap-1">
-                    <button @click="tab = 'overview'"
-                            :class="tab === 'overview' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="flex items-center gap-2 py-3 px-4 sm:px-6 border-b-2 font-semibold text-sm sm:text-base transition-colors whitespace-nowrap">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                        Overview
-                    </button>
-                    <button @click="tab = 'charts'"
-                            :class="tab === 'charts' ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                            class="flex items-center gap-2 py-3 px-4 sm:px-6 border-b-2 font-semibold text-sm sm:text-base transition-colors whitespace-nowrap">
-                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h2v12h-2V4zM14 4h2v12h-2V4z"/></svg>
-                        Charts
-                    </button>
+            @php
+                $helloName = \Illuminate\Support\Str::before(Auth::user()->name, ' ');
+                $monthBars = $chartData['monthly_income'] ?? [];
+                $monthLabels = $chartData['monthly_labels'] ?? [];
+                $monthMax = max(1, max($monthBars ?: [0]));
+                $soldCount = $chartData['goat_status']['sold'] ?? 0;
+            @endphp
+
+            <section class="spike-board" x-data="chartsDashboard()" x-init="init()">
+                <div class="spike-top">
+                    <article class="spike-card spike-hello">
+                        <div>
+                            <h2>Congratulations {{ $helloName }}</h2>
+                            <p class="hello-copy">{{ $kpis['total_goats'] }} goats are in the herd. {{ $soldCount }} have been sold.</p>
+                            <div class="spike-stat">
+                                <span class="spike-dot" style="background:#e8fff6;color:#0f9f78">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v8a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>
+                                </span>
+                                <div>
+                                    <b>{{ $kpis['total_goats'] }} in the herd</b>
+                                    <span>Active animals</span>
+                                </div>
+                            </div>
+                            <div class="spike-stat">
+                                <span class="spike-dot" style="background:#fff6e8;color:#b76e00">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 2M12 22a10 10 0 100-20 10 10 0 000 20z"/></svg>
+                                </span>
+                                <div>
+                                    <b>{{ $soldCount }} sold</b>
+                                    <span>Left the herd</span>
+                                </div>
+                            </div>
+                            <div class="spike-stat">
+                                <span class="spike-dot" style="background:#ecf2ff;color:#5d87ff">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11a4 4 0 10-8 0M4 20a8 8 0 0116 0"/></svg>
+                                </span>
+                                <div>
+                                    <b>{{ $kpis['total_investors'] }} investors</b>
+                                    <span>Sharing the farm</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="goat-stage" aria-hidden="true">
+                            <svg class="goat-svg" viewBox="0 0 200 170">
+                                <ellipse class="goat-shadow" cx="104" cy="156" rx="42" ry="7" fill="#c9d7ee"/>
+                                <g class="goat-tail">
+                                    <path d="M58 96 q-16 2 -10 20" stroke="#c4a574" stroke-width="4" fill="none" stroke-linecap="round"/>
+                                </g>
+                                <ellipse cx="96" cy="108" rx="44" ry="26" fill="#f3e4cf"/>
+                                <ellipse cx="96" cy="112" rx="28" ry="16" fill="#fff8ef" opacity="0.7"/>
+                                <g class="goat-leg goat-leg-a"><rect x="70" y="122" width="8" height="28" rx="4" fill="#e7d3b5"/></g>
+                                <g class="goat-leg goat-leg-b"><rect x="86" y="122" width="8" height="28" rx="4" fill="#dcc6a6"/></g>
+                                <g class="goat-leg goat-leg-a"><rect x="108" y="122" width="8" height="28" rx="4" fill="#e7d3b5"/></g>
+                                <g class="goat-leg goat-leg-b"><rect x="124" y="122" width="8" height="28" rx="4" fill="#dcc6a6"/></g>
+                                <path d="M118 96 q10 -18 28 -16" stroke="#f3e4cf" stroke-width="16" stroke-linecap="round"/>
+                                <g class="goat-ear">
+                                    <ellipse cx="128" cy="70" rx="9" ry="5" fill="#e4cba8" transform="rotate(-28 128 70)"/>
+                                </g>
+                                <ellipse cx="146" cy="78" rx="22" ry="18" fill="#f7efe3"/>
+                                <path d="M132 64 q-2 -18 10 -20" stroke="#e2c56a" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+                                <path d="M146 62 q8 -16 16 -10" stroke="#e2c56a" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+                                <circle cx="154" cy="76" r="2.3" fill="#2a3547"/>
+                                <circle cx="154.7" cy="75.4" r="0.7" fill="#fff"/>
+                                <ellipse cx="164" cy="84" rx="8" ry="5.5" fill="#fff"/>
+                                <path d="M160 86 q4 3 8 0" stroke="#d7b899" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+                                <path d="M138 92 q8 6 16 2" stroke="#5d87ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                    </article>
+
+                    <article class="spike-card">
+                        <h3>Total Capital</h3>
+                        <p class="spike-kicker">Money invested in the farm</p>
+                        <p class="spike-figure">PKR {{ number_format($kpis['total_capital'], 0) }}</p>
+                        <div class="pay-bars" aria-hidden="true">
+                            @foreach ($monthLabels as $i => $label)
+                                @php
+                                    $h = max(12, (int) round((($monthBars[$i] ?? 0) / $monthMax) * 100));
+                                @endphp
+                                <span>
+                                    <i style="--h: {{ $h }}%; --delay: {{ $i * 70 }}ms"></i>
+                                    <em>{{ \Illuminate\Support\Str::before($label, ' ') }}</em>
+                                </span>
+                            @endforeach
+                        </div>
+                    </article>
+
+                    <article class="spike-card">
+                        <h3>Herd Value</h3>
+                        <p class="spike-kicker">PKR {{ number_format($kpis['current_herd_value'], 0) }}</p>
+                        <div class="spike-chart">
+                            <canvas x-ref="herdChart"></canvas>
+                        </div>
+                    </article>
                 </div>
-            </div>
 
-            {{-- ============================================================= --}}
-            {{-- TAB 1: OVERVIEW (existing dashboard)                          --}}
-            {{-- ============================================================= --}}
-            <div x-show="tab === 'overview'" x-transition.opacity.duration.150ms>
+                <div class="spike-mid">
+                    <article class="spike-card">
+                        <h3>Charts</h3>
+                        <p class="spike-kicker">Income and expenses, last six months</p>
+                        <div class="spike-chart tall">
+                            <canvas x-ref="incomeExpenseChart"></canvas>
+                        </div>
+                    </article>
+                    <article class="spike-card">
+                        <h3>Net Profit</h3>
+                        <p class="spike-figure {{ $kpis['net_profit'] >= 0 ? '' : '' }}" style="color: {{ $kpis['net_profit'] >= 0 ? '#0f9f78' : '#d92d20' }}">PKR {{ number_format($kpis['net_profit'], 0) }}</p>
+                        <p class="spike-delta {{ $kpis['return_pct'] >= 0 ? 'up' : 'down' }}">Return % {{ $kpis['return_pct'] >= 0 ? '+' : '' }}{{ number_format($kpis['return_pct'], 1) }}%</p>
+                        <p class="spike-kicker" style="margin-top:0.8rem">Realized Profit PKR {{ number_format($kpis['realized_profit'], 0) }}</p>
+                        <div class="spike-chart">
+                            <canvas x-ref="netProfitChart"></canvas>
+                        </div>
+                    </article>
+                    <article class="spike-card">
+                        <h3>Goat status</h3>
+                        <p class="spike-kicker">In herd, sold, and deceased</p>
+                        <div class="spike-chart">
+                            <canvas x-ref="goatStatusChart"></canvas>
+                        </div>
+                    </article>
+                </div>
 
-            {{-- ============================================================= --}}
-            {{-- AI INSIGHTS & ALERTS PANEL                                     --}}
-            {{-- ============================================================= --}}
-            <div class="bg-white shadow-sm rounded-lg p-4 sm:p-5 mb-4">
-                <div class="flex items-center justify-between mb-3">
+                <div class="spike-rest">
+                    <article class="spike-card">
+                        <h3>Expense mix</h3>
+                        <div class="spike-chart">
+                            <canvas x-ref="expenseChart"></canvas>
+                        </div>
+                    </article>
+                    <article class="spike-card">
+                        <h3>Investor capital</h3>
+                        <div class="spike-chart">
+                            <canvas x-ref="investorChart"></canvas>
+                        </div>
+                    </article>
+                    <article class="spike-card">
+                        <h3>Breeding</h3>
+                        <div class="spike-chart">
+                            <canvas x-ref="breedingChart"></canvas>
+                        </div>
+                    </article>
+                    <article class="spike-card">
+                        <h3>This month</h3>
+                        <p class="spike-figure" style="color: {{ $kpis['net_this_month'] >= 0 ? '#0f9f78' : '#d92d20' }}">{{ $kpis['net_this_month'] >= 0 ? '+' : '' }}{{ number_format($kpis['net_this_month'], 0) }}</p>
+                        <p class="spike-kicker">Income {{ number_format($kpis['income_this_month'], 0) }}</p>
+                        <p class="spike-kicker">Expenses {{ number_format($kpis['expense_this_month'], 0) }}</p>
+                    </article>
+                </div>
+            </section>
+
+            @php
+                $aiLatestFarm = \App\Models\AiAnalysis::farm()->latestFirst()->first();
+                $aiRuleAlerts = app(\App\Services\Ai\RuleBasedAlertService::class)->alerts();
+            @endphp
+
+            <section class="insight-panel">
+                <div class="flex items-center justify-between gap-3 mb-3">
                     <h3 class="font-semibold text-gray-900 text-sm sm:text-base flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         AI Insights &amp; Alerts
-                        <span class="text-[10px] font-semibold uppercase bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">AI</span>
+                        <span class="text-[10px] font-semibold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full">Live</span>
                     </h3>
-                    <a href="{{ route('farm.ai-insights.index') }}" class="text-xs text-indigo-600 hover:underline">View full report →</a>
+                    <a href="{{ route('farm.ai-insights.index') }}" class="text-xs font-semibold text-emerald-800 hover:underline">Open report</a>
                 </div>
-
-                @php
-                    $aiLatestFarm = \App\Models\AiAnalysis::farm()->latestFirst()->first();
-                    $aiRuleAlerts = app(\App\Services\Ai\RuleBasedAlertService::class)->alerts();
-                @endphp
 
                 <div class="space-y-1.5">
                     @foreach ($aiRuleAlerts->take(5) as $ra)
@@ -86,125 +195,36 @@
                         @endforeach
                     @endif
                     @if ($aiRuleAlerts->isEmpty() && collect($aiLatestFarm->alerts ?? [])->isEmpty())
-                        <p class="text-xs text-green-700">✓ No active alerts.</p>
+                        <p class="text-xs text-emerald-700">No active alerts.</p>
                     @endif
                 </div>
 
                 @if ($aiLatestFarm)
-                    <div class="mt-3 pt-3 border-t border-gray-100">
+                    <div class="mt-3 pt-3 border-t border-stone-100">
                         <p class="text-xs text-gray-600">{{ collect($aiLatestFarm->insights ?? [])->first()['detail'] ?? '' }}</p>
-                        <p class="text-[10px] text-gray-400 mt-1.5">Latest herd report: {{ $aiLatestFarm->generated_at->format('M d, g:i A') }} ·
-                            <a href="{{ route('farm.ai-insights.index') }}" class="text-indigo-600 hover:underline">open report</a></p>
+                        <p class="text-[10px] text-gray-400 mt-1.5">Latest herd report: {{ $aiLatestFarm->generated_at->format('M d, g:i A') }}</p>
                     </div>
                 @else
-                    <div class="mt-3 pt-3 border-t border-gray-100">
-                        <p class="text-xs text-gray-400">No AI herd report yet — <a href="{{ route('farm.ai-insights.index') }}" class="text-indigo-600 hover:underline">generate the first one</a>.</p>
+                    <div class="mt-3 pt-3 border-t border-stone-100">
+                        <p class="text-xs text-gray-400">No AI herd report yet. <a href="{{ route('farm.ai-insights.index') }}" class="text-emerald-800 font-semibold hover:underline">Generate the first one</a>.</p>
                     </div>
                 @endif
 
                 <div class="mt-3">
                     <x-ai-disclaimer compact />
                 </div>
-            </div>
+            </section>
 
-            {{-- ============================================================= --}}
-            {{-- MOBILE: TOTAL CAPITAL HERO                                     --}}
-            {{-- ============================================================= --}}
-            <div class="mobile-only mg-hero mb-3">
-                <p class="mg-hero-label">Total Capital</p>
-                <p class="mg-hero-value">PKR {{ number_format($kpis['total_capital'], 0) }}</p>
-            </div>
-
-            {{-- ============================================================= --}}
-            {{-- MOBILE: METRIC GRID (dark-green cards)                        --}}
-            {{-- ============================================================= --}}
-            <div class="mobile-only grid grid-cols-3 gap-2 mb-2">
-                <div class="mg-stat-card-dark">
-                    <p class="mg-stat-label">Net Profit</p>
-                    <p class="mg-stat-value {{ $kpis['net_profit'] >= 0 ? '' : '' }}" style="color: {{ $kpis['net_profit'] >= 0 ? '#86efac' : '#fdba74' }}">
-                        {{ $kpis['net_profit'] >= 0 ? '+' : '' }}{{ number_format($kpis['net_profit'], 0) }}
-                    </p>
-                </div>
-                <div class="mg-stat-card-dark">
-                    <p class="mg-stat-label">Return</p>
-                    <p class="mg-stat-value" style="color: {{ $kpis['return_pct'] >= 0 ? '#86efac' : '#fdba74' }}">
-                        {{ $kpis['return_pct'] >= 0 ? '+' : '' }}{{ number_format($kpis['return_pct'], 1) }}%
-                    </p>
-                </div>
-                <div class="mg-stat-card-dark">
-                    <p class="mg-stat-label">Realized</p>
-                    <p class="mg-stat-value" style="color: #fdba74">
-                        +{{ number_format($kpis['realized_profit'], 0) }}
-                    </p>
-                </div>
-            </div>
-
-            {{-- ============================================================= --}}
-            {{-- MOBILE: SECONDARY STAT GRID (white cards)                     --}}
-            {{-- ============================================================= --}}
-            <div class="mobile-only grid grid-cols-3 gap-2 mb-3">
-                <div class="mg-stat-card-light">
-                    <p class="mg-stat-label">Herd Value</p>
-                    <p class="mg-stat-value">{{ number_format($kpis['current_herd_value'], 0) }}</p>
-                </div>
-                <div class="mg-stat-card-light">
-                    <p class="mg-stat-label">Expenses</p>
-                    <p class="mg-stat-value">{{ number_format($kpis['total_expenses'], 0) }}</p>
-                </div>
-                <div class="mg-stat-card-light">
-                    <p class="mg-stat-label">Goats</p>
-                    <p class="mg-stat-value" style="color: #16a34a">{{ $kpis['total_goats'] }}</p>
-                </div>
-            </div>
-
-            {{-- ============================================================= --}}
-            {{-- MOBILE: CASHFLOW MINI BARS                                    --}}
-            {{-- ============================================================= --}}
-            <div class="mobile-only mb-3">
-                <div class="mg-section-title">
-                    <h3>Cashflow</h3>
-                    <span style="font-size: 0.6875rem; font-weight: 600; color: var(--mg-orange);">Income vs Exp</span>
-                </div>
-                <div class="bg-white rounded-2xl p-3 shadow-sm flex items-end justify-between gap-1.5" style="height: 5rem;">
-                    @php
-                        $months = collect([
-                            ['label' => 'M1', 'income' => $kpis['income_this_month'] ?? 0, 'exp' => $kpis['expense_this_month'] ?? 0],
-                        ]);
-                        // Generate 6 months of placeholder bars using available data, plus proportional bars
-                        $baseIncome = max($kpis['income_this_month'] ?? 100, 100);
-                        $baseExp = max($kpis['expense_this_month'] ?? 80, 80);
-                        $maxVal = max($baseIncome, $baseExp, 1);
-                    @endphp
-                    @for ($i = 0; $i < 6; $i++)
-                        @php
-                            $inc = $baseIncome * (0.6 + ($i * 0.08) + (rand(-10, 10) / 100));
-                            $exp = $baseExp * (0.5 + ($i * 0.07) + (rand(-10, 10) / 100));
-                            $incH = max(round(($inc / $maxVal) * 100), 8);
-                            $expH = max(round(($exp / $maxVal) * 100), 8);
-                        @endphp
-                        <div class="flex flex-col items-center gap-1 flex-1">
-                            <div class="flex items-end gap-0.5 w-full justify-center" style="height: 3rem;">
-                                <div style="width: 0.4rem; height: {{ $incH }}%; background: #16a34a; border-radius: 2px;"></div>
-                                <div style="width: 0.4rem; height: {{ $expH }}%; background: #e7d4b0; border-radius: 2px;"></div>
-                            </div>
-                        </div>
-                    @endfor
-                </div>
-            </div>
-
-            {{-- ============================================================= --}}
-            {{-- MOBILE: INVESTOR SETTLEMENT LIST                              --}}
-            {{-- ============================================================= --}}
-            <div class="mobile-only mb-3">
+            <div class="mobile-only">
                 <div class="mg-section-title">
                     <h3>Investor Settlement</h3>
-                    <a href="{{ route('investors.index') }}">Manage →</a>
+                    <a href="{{ route('investors.index') }}">Manage</a>
                 </div>
                 @forelse ($investors as $inv)
                     <a href="{{ route('investors.show', $inv) }}" class="mobile-card-item block">
                         <div class="mobile-card-row">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="mg-avatar-sm">{{ strtoupper(substr($inv->name, 0, 1)) }}</span>
+                                <span class="mg-avatar-sm">{{ strtoupper(mb_substr($inv->name, 0, 1)) }}</span>
                                 <div class="min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $inv->name }}</p>
                                     <p class="text-xs text-gray-400 truncate">{{ number_format($inv->share_pct, 1) }}% · {{ number_format($inv->total_capital, 0) }}</p>
@@ -218,123 +238,52 @@
                 @empty
                     <div class="mobile-card-item text-center text-sm text-gray-400 py-6">
                         No investors yet.
-                        <a href="{{ route('investors.create') }}" class="block mt-2 text-emerald-600 font-semibold">+ Add Investor</a>
+                        <a href="{{ route('investors.create') }}" class="block mt-2 text-emerald-700 font-semibold">Add investor</a>
                     </div>
                 @endforelse
             </div>
 
-            {{-- ============================================================= --}}
-            {{-- FINANCIAL OVERVIEW KPI CARDS (DESKTOP ONLY)                    --}}
-            {{-- ============================================================= --}}
-            <div class="desktop-only-table">
-                <div class="mb-2 sm:mb-3">
-                    <h3 class="text-base sm:text-lg font-bold text-gray-700">Financial Overview</h3>
+            @if ($kpis['pending_payouts'] > 0)
+                <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-sm font-medium text-amber-900">
+                        Pending payouts: PKR {{ number_format($kpis['pending_payouts'], 0) }}
+                        across {{ $kpis['pending_count'] }} {{ \Illuminate\Support\Str::plural('distribution', $kpis['pending_count']) }}
+                    </p>
+                    <a href="{{ route('reports.profit-loss') }}" class="text-sm font-semibold text-amber-950 hover:underline">Review</a>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8">
-                    <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-blue-500">
-                        <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Total Capital</p>
-                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['total_capital'], 0) }}</p>
-                    </div>
-                    <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-green-500">
-                        <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Herd Value</p>
-                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['current_herd_value'], 0) }}</p>
-                    </div>
-                    <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-teal-500">
-                        <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Realized Profit</p>
-                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['realized_profit'], 0) }}</p>
-                    </div>
-                    <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 border-red-500">
-                        <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Total Expenses</p>
-                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold text-gray-900 whitespace-nowrap">PKR {{ number_format($kpis['total_expenses'], 0) }}</p>
-                    </div>
-                    <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 {{ $kpis['net_profit'] >= 0 ? 'border-green-600' : 'border-red-600' }}">
-                        <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Net Profit</p>
-                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold whitespace-nowrap {{ $kpis['net_profit'] >= 0 ? 'text-green-600' : 'text-red-600' }}">
-                            PKR {{ number_format($kpis['net_profit'], 0) }}
-                        </p>
-                    </div>
-                    <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-5 border-l-4 {{ $kpis['return_pct'] >= 0 ? 'border-amber-500' : 'border-red-600' }}">
-                        <p class="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Return %</p>
-                        <p class="mt-1 sm:mt-2 text-sm sm:text-lg lg:text-base font-bold whitespace-nowrap {{ $kpis['return_pct'] >= 0 ? 'text-amber-600' : 'text-red-600' }}">
-                            {{ $kpis['return_pct'] >= 0 ? '+' : '' }}{{ number_format($kpis['return_pct'], 1) }}%
-                        </p>
-                    </div>
-                </div>
+            @endif
 
-                {{-- Secondary stats --}}
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-6 sm:mb-8">
-                    <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
-                        <span class="text-2xl sm:text-3xl">🐐</span>
-                        <div>
-                            <p class="text-[10px] sm:text-xs text-gray-500">Active Goats</p>
-                            <p class="text-lg sm:text-xl font-bold text-gray-900">{{ $kpis['total_goats'] }}</p>
-                        </div>
-                    </div>
-                    <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
-                        <span class="text-2xl sm:text-3xl">👥</span>
-                        <div>
-                            <p class="text-[10px] sm:text-xs text-gray-500">Investors</p>
-                            <p class="text-lg sm:text-xl font-bold text-gray-900">{{ $kpis['total_investors'] }}</p>
-                        </div>
-                    </div>
-                    <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4">
-                        <p class="text-[10px] sm:text-xs text-gray-500">Income (This Month)</p>
-                        <p class="text-base sm:text-xl font-bold text-green-600 whitespace-nowrap">+{{ number_format($kpis['income_this_month'], 0) }}</p>
-                    </div>
-                    <div class="bg-white shadow-sm rounded-xl sm:rounded-lg p-3 sm:p-4">
-                        <p class="text-[10px] sm:text-xs text-gray-500">Expenses (This Month)</p>
-                        <p class="text-base sm:text-xl font-bold text-red-600 whitespace-nowrap">-{{ number_format($kpis['expense_this_month'], 0) }}</p>
-                    </div>
-                </div>
-
-                {{-- Pending payouts banner --}}
-                @if ($kpis['pending_payouts'] > 0)
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl sm:rounded-lg p-4 mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-2">
-                        <div class="min-w-0">
-                            <p class="text-sm font-medium text-amber-800">
-                                ⏳ Pending Profit Payouts: PKR {{ number_format($kpis['pending_payouts'], 0) }}
-                                ({{ $kpis['pending_count'] }} distributions)
-                            </p>
-                        </div>
-                        <a href="{{ route('reports.profit-loss') }}" class="text-sm font-semibold text-amber-900 hover:underline whitespace-nowrap">Review →</a>
-                    </div>
-                @endif
-            </div>
-
-            {{-- ============================================================= --}}
-            {{-- INVESTOR POSITIONS — DESKTOP TABLE                             --}}
-            {{-- ============================================================= --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 sm:mb-8 desktop-only-table">
-                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">👥 Investor Positions & Settlement</h3>
-                    <a href="{{ route('investors.index') }}" class="text-sm font-semibold text-indigo-600 hover:underline">Manage →</a>
+            <section class="panel-card desktop-only-table overflow-hidden !p-0">
+                <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
+                    <h3>Investor positions</h3>
+                    <a href="{{ route('investors.index') }}" class="text-sm font-semibold text-emerald-800 hover:underline">Manage</a>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                        <thead class="text-stone-500 uppercase text-xs">
                             <tr>
                                 <th class="px-4 py-3 text-left">Investor</th>
                                 <th class="px-4 py-3 text-left">Role</th>
                                 <th class="px-4 py-3 text-right">Capital</th>
                                 <th class="px-4 py-3 text-right">Own %</th>
-                                <th class="px-4 py-3 text-right">Herd Share</th>
-                                <th class="px-4 py-3 text-right">Profit Share</th>
-                                <th class="px-4 py-3 text-right">Exp Owed</th>
-                                <th class="px-4 py-3 text-right">Exp Paid</th>
+                                <th class="px-4 py-3 text-right">Herd share</th>
+                                <th class="px-4 py-3 text-right">Profit share</th>
+                                <th class="px-4 py-3 text-right">Exp owed</th>
+                                <th class="px-4 py-3 text-right">Exp paid</th>
                                 <th class="px-4 py-3 text-right">Settlement</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-stone-100">
                             @forelse ($investors as $inv)
-                                <tr>
+                                <tr class="hover:bg-stone-50/80">
                                     <td class="px-4 py-3 font-medium text-gray-900">
-                                        <a href="{{ route('investors.show', $inv) }}" class="hover:text-indigo-600">{{ $inv->name }}</a>
+                                        <a href="{{ route('investors.show', $inv) }}" class="hover:text-emerald-800">{{ $inv->name }}</a>
                                     </td>
                                     <td class="px-4 py-3">
                                         @if ($inv->isManager())
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">Manager</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-800">Manager</span>
                                         @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Investor</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-stone-100 text-stone-600">Investor</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-right text-gray-700">{{ number_format($inv->total_capital, 0) }}</td>
@@ -343,7 +292,7 @@
                                     <td class="px-4 py-3 text-right text-gray-700">{{ number_format($inv->profit_share, 0) }}</td>
                                     <td class="px-4 py-3 text-right text-gray-700">{{ number_format($inv->expense_owed, 0) }}</td>
                                     <td class="px-4 py-3 text-right text-gray-700">{{ number_format($inv->expense_paid, 0) }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold {{ $inv->settlement_balance >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                    <td class="px-4 py-3 text-right font-semibold {{ $inv->settlement_balance >= 0 ? 'text-emerald-700' : 'text-red-600' }}">
                                         {{ $inv->settlement_balance >= 0 ? '+' : '' }}{{ number_format($inv->settlement_balance, 0) }}
                                     </td>
                                 </tr>
@@ -355,178 +304,92 @@
                         </tbody>
                     </table>
                 </div>
+            </section>
+
+            <div class="desktop-only-table grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <article class="panel-card">
+                    <h3>Expenses by Category</h3>
+                    <p class="panel-note mb-4">Totals already included in the chart above.</p>
+                    @forelse ($expenseByCategory as $cat)
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1.5">
+                                <span class="text-stone-700 truncate">{{ $cat->category }}</span>
+                                <span class="font-medium text-stone-900 whitespace-nowrap ml-2">{{ number_format($cat->total, 0) }} <span class="text-stone-400">({{ $cat->percentage }}%)</span></span>
+                            </div>
+                            <div class="meter">
+                                <span class="bg-[#1b3a2b]" style="width: {{ min($cat->percentage, 100) }}%"></span>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-sm text-stone-400 text-center py-4">No expenses logged yet.</p>
+                    @endforelse
+                </article>
+
+                <article class="panel-card">
+                    <h3>Herd composition</h3>
+                    <p class="panel-note mb-3">Value of animals still in the herd.</p>
+                    @forelse ($herdComposition as $breed)
+                        <div class="flex items-center justify-between py-2.5 border-b border-stone-100 last:border-0">
+                            <div class="flex items-center gap-3">
+                                <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 text-emerald-800 font-bold text-sm">
+                                    {{ $breed->count }}
+                                </span>
+                                <span class="text-stone-700 font-medium">{{ $breed->breed }}</span>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-stone-900">{{ number_format($breed->value, 0) }}</p>
+                                <p class="text-xs text-stone-400">{{ $breed->percentage }}% of value</p>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-sm text-stone-400 text-center py-4">No goats in the herd yet.</p>
+                    @endforelse
+                </article>
             </div>
 
-            {{-- ============================================================= --}}
-            {{-- TWO-COLUMN: EXPENSE BREAKDOWN + HERD COMPOSITION (DESKTOP)    --}}
-            {{-- ============================================================= --}}
-            <div class="desktop-only-table grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                {{-- Expenses by Category --}}
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg">
-                    <div class="p-4 sm:p-6 border-b border-gray-100">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900">💸 Expenses by Category</h3>
-                    </div>
-                    <div class="p-4 sm:p-6">
-                        @forelse ($expenseByCategory as $cat)
-                            <div class="mb-3">
-                                <div class="flex justify-between text-xs sm:text-sm mb-1">
-                                    <span class="text-gray-700 truncate">{{ $cat->category }}</span>
-                                    <span class="font-medium text-gray-900 whitespace-nowrap ml-2">{{ number_format($cat->total, 0) }} <span class="text-gray-400">({{ $cat->percentage }}%)</span></span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-red-500 h-2 rounded-full" style="width: {{ min($cat->percentage, 100) }}%"></div>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-sm text-gray-400 text-center py-4">No expenses logged yet.</p>
-                        @endforelse
-                    </div>
-                </div>
-
-                {{-- Herd Composition by Breed --}}
-                <div class="bg-white overflow-hidden shadow-sm rounded-xl sm:rounded-lg">
-                    <div class="p-4 sm:p-6 border-b border-gray-100">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900">🐐 Herd Composition (In Herd)</h3>
-                    </div>
-                    <div class="p-4 sm:p-6">
-                        @forelse ($herdComposition as $breed)
-                            <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                                <div class="flex items-center gap-3">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 text-green-700 font-bold text-sm">
-                                        {{ $breed->count }}
-                                    </span>
-                                    <span class="text-gray-700 font-medium text-sm sm:text-base">{{ $breed->breed }}</span>
-                                </div>
-                                <div class="text-right">
-                                    <p class="font-semibold text-gray-900 text-sm sm:text-base">{{ number_format($breed->value, 0) }}</p>
-                                    <p class="text-[10px] sm:text-xs text-gray-400">{{ $breed->percentage }}% of herd</p>
-                                </div>
-                            </div>
-                        @empty
-                            <p class="text-sm text-gray-400 text-center py-4">No goats in herd yet.</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            {{-- ============================================================= --}}
-            {{-- RECENT TRANSACTIONS — DESKTOP TABLE                            --}}
-            {{-- ============================================================= --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg desktop-only-table">
-                <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">Recent Transactions</h3>
-                    <a href="{{ route('transactions.index') }}" class="text-sm font-semibold text-indigo-600 hover:underline">View All →</a>
+            <section class="panel-card desktop-only-table overflow-hidden !p-0">
+                <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
+                    <h3>Recent transactions</h3>
+                    <a href="{{ route('transactions.index') }}" class="text-sm font-semibold text-emerald-800 hover:underline">View all</a>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+                        <thead class="text-stone-500 uppercase text-xs">
                             <tr>
-                                <th class="px-6 py-3 text-left">Date</th>
-                                <th class="px-6 py-3 text-left">Type</th>
-                                <th class="px-6 py-3 text-left">Category</th>
-                                <th class="px-6 py-3 text-left">Paid By</th>
-                                <th class="px-6 py-3 text-right">Amount</th>
+                                <th class="px-5 py-3 text-left">Date</th>
+                                <th class="px-5 py-3 text-left">Type</th>
+                                <th class="px-5 py-3 text-left">Category</th>
+                                <th class="px-5 py-3 text-left">Paid by</th>
+                                <th class="px-5 py-3 text-right">Amount</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-stone-100">
                             @forelse ($recentTransactions as $t)
-                                <tr>
-                                    <td class="px-6 py-3 text-gray-600">{{ $t->date->format('M d, Y') }}</td>
-                                    <td class="px-6 py-3">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                            {{ $t->type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                <tr class="hover:bg-stone-50/80">
+                                    <td class="px-5 py-3 text-stone-600">{{ $t->date->format('M d, Y') }}</td>
+                                    <td class="px-5 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $t->type === 'income' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
                                             {{ ucfirst($t->type) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-3 text-gray-700">{{ $t->category }}</td>
-                                    <td class="px-6 py-3 text-gray-500">{{ $t->investor?->name ?? '—' }}</td>
-                                    <td class="px-6 py-3 text-right font-medium {{ $t->type === 'income' ? 'text-green-600' : 'text-red-600' }}">
+                                    <td class="px-5 py-3 text-stone-700">{{ $t->category }}</td>
+                                    <td class="px-5 py-3 text-stone-500">{{ $t->investor?->name ?? '—' }}</td>
+                                    <td class="px-5 py-3 text-right font-medium {{ $t->type === 'income' ? 'text-emerald-700' : 'text-red-600' }}">
                                         {{ $t->type === 'income' ? '+' : '-' }}{{ number_format($t->amount, 0) }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-8 text-center text-gray-400">No transactions yet.</td>
+                                    <td colspan="5" class="px-5 py-8 text-center text-stone-400">No transactions yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            </div>{{-- /TAB 1: OVERVIEW --}}
-
-            {{-- ============================================================= --}}
-            {{-- TAB 2: CHARTS                                                 --}}
-            {{-- ============================================================= --}}
-            <div x-show="tab === 'charts'" x-transition.opacity.duration.150ms
-                 x-data="chartsDashboard()"
-                 x-init="init()">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-
-                    {{-- 1. Income vs Expense (Monthly Bar) --}}
-                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">💰 Income vs Expense (6 Months)</h3>
-                        <div style="position: relative; height: 260px;">
-                            <canvas x-ref="incomeExpenseChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- 2. Expense Breakdown (Doughnut) --}}
-                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">💸 Expense Breakdown</h3>
-                        <div style="position: relative; height: 260px;">
-                            <canvas x-ref="expenseChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- 3. Herd Composition by Breed (Doughnut) --}}
-                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">🐐 Herd Composition by Breed</h3>
-                        <div style="position: relative; height: 260px;">
-                            <canvas x-ref="herdChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- 4. Goat Status Distribution (Doughnut) --}}
-                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">📊 Goat Status Distribution</h3>
-                        <div style="position: relative; height: 260px;">
-                            <canvas x-ref="goatStatusChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- 5. Investor Capital Distribution (Bar) --}}
-                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">👥 Investor Capital Distribution</h3>
-                        <div style="position: relative; height: 260px;">
-                            <canvas x-ref="investorChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- 6. Monthly Net Profit Trend (Line) --}}
-                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">📈 Net Profit Trend (6 Months)</h3>
-                        <div style="position: relative; height: 260px;">
-                            <canvas x-ref="netProfitChart"></canvas>
-                        </div>
-                    </div>
-
-                    {{-- 7. Breeding / Pregnancy Status (Doughnut) --}}
-                    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
-                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 mb-4">🤱 Breeding & Pregnancy Status</h3>
-                        <div style="position: relative; height: 260px;">
-                            <canvas x-ref="breedingChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>{{-- /TAB 2: CHARTS --}}
+            </section>
         </div>
     </div>
 
-    {{-- ============================================================= --}}
-    {{-- Chart.js initialization script                                 --}}
-    {{-- ============================================================= --}}
     @push('scripts')
     <script>
     function chartsDashboard() {
@@ -534,9 +397,7 @@
             charts: [],
             initialized: false,
             init() {
-                // Guard against Alpine re-initialization (x-init can fire more than once)
                 if (this.initialized) return;
-                // Wait for Chart.js to load
                 if (typeof Chart === 'undefined') {
                     setTimeout(() => this.init(), 100);
                     return;
@@ -548,157 +409,135 @@
                 const d = window.__chartData;
                 if (!d) return;
 
-                const palette = ['#16a34a', '#f59e0b', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
+                const palette = ['#5d87ff', '#49beff', '#13deb9', '#ffae1f', '#fa896b', '#539bff', '#7c8fac', '#b8c4ff'];
+                const money = (v) => 'PKR ' + Math.round(v).toLocaleString();
 
-                // Chart defaults
-                Chart.defaults.font.family = 'Figtree, sans-serif';
+                Chart.defaults.font.family = '"Plus Jakarta Sans", Figtree, sans-serif';
                 Chart.defaults.font.size = 12;
+                Chart.defaults.color = '#6b7280';
+                Chart.defaults.animation.duration = 1400;
+                Chart.defaults.animation.easing = 'easeOutQuart';
 
-                // --- 1. Income vs Expense Bar Chart ---
+                const frame = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12, boxWidth: 8 } } },
+                };
+
                 this.charts.push(new Chart(this.$refs.incomeExpenseChart, {
-                    type: 'bar',
+                    type: 'line',
                     data: {
                         labels: d.monthly_labels,
                         datasets: [
-                            { label: 'Income', data: d.monthly_income, backgroundColor: '#16a34a', borderRadius: 4 },
-                            { label: 'Expense', data: d.monthly_expense, backgroundColor: '#ef4444', borderRadius: 4 },
+                            { label: 'Income', data: d.monthly_income, borderColor: '#5d87ff', backgroundColor: 'rgba(93,135,255,0.16)', fill: true, tension: 0.42, borderWidth: 2.5, pointRadius: 0 },
+                            { label: 'Expense', data: d.monthly_expense, borderColor: '#49beff', backgroundColor: 'rgba(73,190,255,0.08)', fill: true, tension: 0.42, borderWidth: 2.5, pointRadius: 0 },
                         ],
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
+                        ...frame,
                         plugins: {
-                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
-                            tooltip: { callbacks: { label: (c) => c.dataset.label + ': PKR ' + Math.round(c.raw).toLocaleString() } },
+                            ...frame.plugins,
+                            tooltip: { callbacks: { label: (c) => c.dataset.label + ': ' + money(c.raw) } },
                         },
-                        scales: { y: { beginAtZero: true, ticks: { callback: (v) => 'PKR ' + v.toLocaleString() } } },
-                    },
-                }));
-
-                // --- 2. Expense Breakdown Doughnut ---
-                this.charts.push(new Chart(this.$refs.expenseChart, {
-                    type: 'doughnut',
-                    data: {
-                        labels: d.expense_categories.length ? d.expense_categories : ['No Data'],
-                        datasets: [{
-                            data: d.expense_amounts.length ? d.expense_amounts : [1],
-                            backgroundColor: palette,
-                            borderWidth: 2, borderColor: '#fff',
-                        }],
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 11 } } },
-                            tooltip: { callbacks: { label: (c) => c.label + ': PKR ' + Math.round(c.raw).toLocaleString() } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { beginAtZero: true, grid: { color: 'rgba(20,38,28,0.06)' }, ticks: { callback: (v) => money(v) } },
                         },
                     },
                 }));
 
-                // --- 3. Herd Composition by Breed Doughnut ---
-                this.charts.push(new Chart(this.$refs.herdChart, {
-                    type: 'doughnut',
-                    data: {
-                        labels: d.breed_names.length ? d.breed_names : ['No Data'],
-                        datasets: [{
-                            data: d.breed_counts.length ? d.breed_counts : [1],
-                            backgroundColor: palette,
-                            borderWidth: 2, borderColor: '#fff',
-                        }],
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 11 } } },
-                            tooltip: { callbacks: { label: (c) => c.label + ': ' + c.raw + ' goats' } },
-                        },
-                    },
-                }));
-
-                // --- 4. Goat Status Distribution Doughnut ---
-                const gs = d.goat_status;
-                this.charts.push(new Chart(this.$refs.goatStatusChart, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['In Herd', 'Sold', 'Deceased'],
-                        datasets: [{
-                            data: [gs.in_herd, gs.sold, gs.deceased].every(v => v === 0) ? [1, 0, 0] : [gs.in_herd, gs.sold, gs.deceased],
-                            backgroundColor: ['#16a34a', '#3b82f6', '#ef4444'],
-                            borderWidth: 2, borderColor: '#fff',
-                        }],
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
-                            tooltip: { callbacks: { label: (c) => c.label + ': ' + c.raw } },
-                        },
-                    },
-                }));
-
-                // --- 5. Investor Capital Distribution Bar ---
-                this.charts.push(new Chart(this.$refs.investorChart, {
-                    type: 'bar',
-                    data: {
-                        labels: d.investor_names.length ? d.investor_names : ['No Data'],
-                        datasets: [{
-                            label: 'Capital (PKR)',
-                            data: d.investor_capital.length ? d.investor_capital : [0],
-                            backgroundColor: '#1b3a2b',
-                            borderRadius: 4,
-                        }],
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { callbacks: { label: (c) => 'PKR ' + Math.round(c.raw).toLocaleString() } },
-                        },
-                        scales: { x: { beginAtZero: true, ticks: { callback: (v) => 'PKR ' + v.toLocaleString() } } },
-                    },
-                }));
-
-                // --- 6. Monthly Net Profit Trend Line ---
                 this.charts.push(new Chart(this.$refs.netProfitChart, {
                     type: 'line',
                     data: {
                         labels: d.monthly_labels,
                         datasets: [{
-                            label: 'Net Profit',
+                            label: 'Net',
                             data: d.monthly_net_profit,
-                            borderColor: '#1b3a2b',
-                            backgroundColor: 'rgba(27, 58, 43, 0.1)',
-                            fill: true, tension: 0.3, borderWidth: 2, pointRadius: 4,
-                            pointBackgroundColor: '#16a34a',
+                            borderColor: '#5d87ff',
+                            backgroundColor: 'rgba(93, 135, 255, 0.12)',
+                            fill: true,
+                            tension: 0.35,
+                            borderWidth: 2.5,
+                            pointRadius: 3,
+                            pointBackgroundColor: '#5d87ff',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
                         }],
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
+                        ...frame,
                         plugins: {
-                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 12 } },
-                            tooltip: { callbacks: { label: (c) => 'PKR ' + Math.round(c.raw).toLocaleString() } },
+                            ...frame.plugins,
+                            tooltip: { callbacks: { label: (c) => money(c.raw) } },
                         },
-                        scales: { y: { ticks: { callback: (v) => 'PKR ' + v.toLocaleString() } } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { grid: { color: 'rgba(20,38,28,0.06)' }, ticks: { callback: (v) => money(v) } },
+                        },
                     },
                 }));
 
-                // --- 7. Breeding / Pregnancy Status Doughnut ---
-                const bs = d.breeding_status;
-                this.charts.push(new Chart(this.$refs.breedingChart, {
-                    type: 'doughnut',
+                const ring = (ref, labels, values, emptyLabel, tip) => {
+                    const empty = !values.length || values.every((v) => Number(v) === 0);
+                    this.charts.push(new Chart(this.$refs[ref], {
+                        type: 'doughnut',
+                        data: {
+                            labels: empty ? [emptyLabel] : labels,
+                            datasets: [{
+                                data: empty ? [1] : values,
+                                backgroundColor: empty ? ['#e7ebe4'] : palette,
+                                borderWidth: 3,
+                                borderColor: '#fff',
+                                hoverOffset: 6,
+                            }],
+                        },
+                        options: {
+                            ...frame,
+                            cutout: '68%',
+                            plugins: {
+                                ...frame.plugins,
+                                tooltip: { callbacks: { label: (c) => empty ? emptyLabel : tip(c) } },
+                            },
+                        },
+                    }));
+                };
+
+                ring('expenseChart', d.expense_categories, d.expense_amounts, 'No expenses', (c) => c.label + ': ' + money(c.raw));
+                ring('herdChart', d.breed_names, d.breed_counts, 'No goats', (c) => c.label + ': ' + c.raw);
+                ring(
+                    'goatStatusChart',
+                    ['In herd', 'Sold', 'Deceased'],
+                    [d.goat_status.in_herd, d.goat_status.sold, d.goat_status.deceased],
+                    'No goats',
+                    (c) => c.label + ': ' + c.raw
+                );
+                ring(
+                    'breedingChart',
+                    ['Bred', 'Pregnant', 'Open', 'Kidded'],
+                    [d.breeding_status.bred, d.breeding_status.pregnant, d.breeding_status.open, d.breeding_status.kidded],
+                    'No records',
+                    (c) => c.label + ': ' + c.raw
+                );
+
+                this.charts.push(new Chart(this.$refs.investorChart, {
+                    type: 'bar',
                     data: {
-                        labels: ['Bred', 'Pregnant', 'Open', 'Kidded'],
+                        labels: d.investor_names.length ? d.investor_names : ['No investors'],
                         datasets: [{
-                            data: [bs.bred, bs.pregnant, bs.open, bs.kidded].every(v => v === 0) ? [1, 0, 0, 0] : [bs.bred, bs.pregnant, bs.open, bs.kidded],
-                            backgroundColor: ['#f59e0b', '#8b5cf6', '#6b7280', '#16a34a'],
-                            borderWidth: 2, borderColor: '#fff',
+                            label: 'Capital',
+                            data: d.investor_capital.length ? d.investor_capital : [0],
+                            backgroundColor: '#5d87ff',
+                            borderRadius: 8,
+                            maxBarThickness: 18,
                         }],
                     },
                     options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 11 } } },
-                            tooltip: { callbacks: { label: (c) => c.label + ': ' + c.raw } },
+                        indexAxis: 'y',
+                        ...frame,
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => money(c.raw) } } },
+                        scales: {
+                            x: { beginAtZero: true, grid: { color: 'rgba(20,38,28,0.06)' }, ticks: { callback: (v) => money(v) } },
+                            y: { grid: { display: false } },
                         },
                     },
                 }));

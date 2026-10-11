@@ -150,7 +150,8 @@ class DashboardChartsTest extends TestCase
         $response->assertSee('Charts', false);
         $response->assertSee('chartsDashboard()', false);
         $response->assertSee('chart.js', false);
-        $response->assertSee("tab: 'overview'", false);
+        $response->assertSee('incomeExpenseChart', false);
+        $response->assertSee('netProfitChart', false);
     }
 
     #[Test]

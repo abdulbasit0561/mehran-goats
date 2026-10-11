@@ -68,7 +68,7 @@
                     </div>
                     <div class="mt-6 flex justify-between items-center">
                         <a href="{{ route('goats.show', $goat) }}" class="text-sm text-gray-500 hover:underline">Cancel</a>
-                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700" onclick="return confirm('Confirm: mark {{ $goat->tag_id }} as dead? This cannot be undone.')">
+                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700" data-confirm="Confirm: mark {{ $goat->tag_id }} as dead? This cannot be undone.">
                             Declare Dead
                         </button>
                     </div>

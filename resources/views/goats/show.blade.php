@@ -123,7 +123,7 @@
                             @if ($goat->status !== 'deceased')
                                 <a href="{{ route('goats.declare-dead', $goat) }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200">Declare Dead</a>
                             @endif
-                            <form method="POST" action="{{ route('goats.destroy', $goat) }}" onsubmit="return confirm('Delete this goat?')">
+                            <form method="POST" action="{{ route('goats.destroy', $goat) }}" data-confirm="Delete this goat?">
                                 @csrf @method('DELETE')
                                 <button class="px-4 py-2 bg-red-50 text-red-700 rounded-md text-sm font-medium hover:bg-red-100">Delete</button>
                             </form>
@@ -243,7 +243,7 @@
                                     {{ $img->taken_at->format('M d') }} · {{ $img->age_months }}mo · {{ $img->weight_kg }}kg
                                 </div>
                                 {{-- Delete button --}}
-                                <form method="POST" action="{{ route('goats.images.destroy', $img) }}" onsubmit="return confirm('Delete this photo?')" class="absolute top-1 right-1">
+                                <form method="POST" action="{{ route('goats.images.destroy', $img) }}" data-confirm="Delete this photo?" class="absolute top-1 right-1">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="bg-red-600/80 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600" title="Delete">&times;</button>
                                 </form>
@@ -489,7 +489,7 @@
                                         @endif
                                         @if ($record->notes) <p class="text-xs text-gray-600 mt-1">{{ $record->notes }}</p> @endif
                                     </div>
-                                    <form method="POST" action="{{ route('health-records.destroy', $record) }}" onsubmit="return confirm('Delete record?')">
+                                    <form method="POST" action="{{ route('health-records.destroy', $record) }}" data-confirm="Delete record?">
                                         @csrf @method('DELETE')
                                         <button class="text-red-500 text-xs">×</button>
                                     </form>
@@ -561,7 +561,7 @@
                                         <span class="text-xs text-gray-500 ml-2">{{ $log->logged_at->format('M d, Y') }}</span>
                                         @if ($log->notes) <span class="text-xs text-gray-400 ml-1">· {{ $log->notes }}</span> @endif
                                     </div>
-                                    <form method="POST" action="{{ route('goats.weight-logs.destroy', $log) }}" onsubmit="return confirm('Delete this weight entry?')">
+                                    <form method="POST" action="{{ route('goats.weight-logs.destroy', $log) }}" data-confirm="Delete this weight entry?">
                                         @csrf @method('DELETE')
                                         <button class="text-red-500 text-xs">×</button>
                                     </form>
@@ -621,7 +621,7 @@
                                 <a href="{{ route('breeding-records.kidding', $activePreg) }}" class="px-2.5 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700">👶 Record Kidding</a>
                                 <form method="POST" action="{{ route('breeding-records.mark-open', $activePreg) }}">
                                     @csrf
-                                    <button class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium hover:bg-gray-200" onclick="return confirm('Mark as did-not-conceive?')">✗ Open</button>
+                                    <button class="px-2.5 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium hover:bg-gray-200" data-confirm="Mark as did-not-conceive?">✗ Open</button>
                                 </form>
                             </div>
                         </div>
@@ -672,7 +672,7 @@
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <a href="{{ route('breeding-records.edit', $record) }}" class="text-gray-400 hover:text-indigo-600 text-xs" title="Edit">✎</a>
-                                        <form method="POST" action="{{ route('breeding-records.destroy', $record) }}" onsubmit="return confirm('Delete record?')">
+                                        <form method="POST" action="{{ route('breeding-records.destroy', $record) }}" data-confirm="Delete record?">
                                             @csrf @method('DELETE')
                                             <button class="text-red-500 text-xs">×</button>
                                         </form>

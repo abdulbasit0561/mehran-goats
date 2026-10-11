@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">Record tag, Mehran Goats symbol</title>
+  <path fill="#141414" fill-rule="evenodd" d="
+    M92 78
+    H176
+    A36 36 0 0 1 212 114
+    V142
+    A36 36 0 0 1 176 178
+    H92
+    A50 50 0 0 1 42 128
+    A50 50 0 0 1 92 78
+    Z
+    M92 112
+    A16 16 0 1 0 92 144
+    A16 16 0 1 0 92 112
+    Z
+    M124 156
+    L124 102
+    L142 102
+    L158 128
+    L174 102
+    L192 102
+    L192 156
+    L176 156
+    L176 124
+    L158 146
+    L140 124
+    L140 156
+    Z"/>
+</svg>

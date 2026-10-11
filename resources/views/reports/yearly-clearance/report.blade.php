@@ -201,7 +201,7 @@
                         Existing transactions are never modified or deleted — you can always compare years later. This cannot be undone.
                     </p>
                     <form method="POST" action="{{ route('reports.yearly-clearance.complete') }}"
-                          onsubmit="return confirm('Complete the yearly clearance for FY {{ $year }}?\n\nThis creates a PERMANENT historical entry and cannot be undone.\nSource transactions are not modified.');">
+                          data-confirm="Complete the yearly clearance for FY {{ $year }}?&#10;&#10;This creates a permanent historical entry and cannot be undone.&#10;Source transactions are not modified.">
                         @csrf
                         <input type="hidden" name="year" value="{{ $year }}" />
                         <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors">

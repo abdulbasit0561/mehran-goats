@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 256" width="900" height="256" role="img" aria-labelledby="title">
+  <title id="title">Mehran Goats, River M lockup</title>
+  <g transform="translate(12,20) scale(0.84)">
+    <path fill="none" stroke="#141414" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"
+          d="M46 200 V112 A30 30 0 0 1 106 112 V154 A22 22 0 0 0 150 154 V112 A30 30 0 0 1 210 112 V200"/>
+  </g>
+  <text x="248" y="122" fill="#141414" font-family="Segoe UI, sans-serif" font-size="72" font-weight="700">Mehran</text>
+  <text x="252" y="174" fill="#141414" font-family="Segoe UI, sans-serif" font-size="26" font-weight="600" letter-spacing="6">GOATS</text>
+</svg>

@@ -91,7 +91,7 @@
                         <div class="flex items-center gap-4 pt-2 mt-2 border-t border-gray-50">
                             <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-investment-modal', { detail: { investorId: {{ $investor->id }} } }))" class="text-xs text-emerald-600 font-medium">💰 Investment</button>
                             <a href="{{ route('investors.edit', $investor) }}" class="text-xs text-indigo-600 font-medium">✏️ Edit</a>
-                            <form method="POST" action="{{ route('investors.destroy', $investor) }}" class="inline" onsubmit="return confirm('Delete this investor?')">
+                            <form method="POST" action="{{ route('investors.destroy', $investor) }}" class="inline" data-confirm="Delete this investor?">
                                 @csrf @method('DELETE')
                                 <button class="text-xs text-red-600 font-medium">🗑️ Delete</button>
                             </form>

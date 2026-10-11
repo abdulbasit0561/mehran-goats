@@ -49,7 +49,7 @@
                             </div>
                             <div class="flex items-center gap-3 shrink-0 ml-4">
                                 <a href="{{ route('breeds.edit', $breed) }}" class="text-sm text-indigo-600 hover:underline">Edit</a>
-                                <form method="POST" action="{{ route('breeds.destroy', $breed) }}" onsubmit="return confirm('Delete breed &quot;{{ e($breed->name) }}&quot;?')">
+                                <form method="POST" action="{{ route('breeds.destroy', $breed) }}" data-confirm="Delete breed &quot;{{ $breed->name }}&quot;?">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-sm text-red-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed" {{ $breed->goats_count > 0 ? 'disabled' : '' }}>Delete</button>
                                 </form>
@@ -85,7 +85,7 @@
                                     <td class="text-gray-500">{{ $breed->description ?? '—' }}</td>
                                     <td>
                                         <a href="{{ route('breeds.edit', $breed) }}" class="text-indigo-600 hover:underline text-xs">Edit</a>
-                                        <form method="POST" action="{{ route('breeds.destroy', $breed) }}" class="inline" onsubmit="return confirm('Delete breed &quot;{{ e($breed->name) }}&quot;?')">
+                                        <form method="POST" action="{{ route('breeds.destroy', $breed) }}" class="inline" data-confirm="Delete breed &quot;{{ $breed->name }}&quot;?">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:underline text-xs disabled:text-gray-400 disabled:cursor-not-allowed" {{ $breed->goats_count > 0 ? 'disabled' : '' }}>Delete</button>
                                         </form>

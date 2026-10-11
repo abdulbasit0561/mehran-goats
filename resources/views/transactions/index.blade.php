@@ -60,7 +60,7 @@
                 </form>
 
                 {{-- Bulk Delete --}}
-                <form method="POST" action="{{ route('transactions.bulk-destroy') }}" class="inline-flex items-center gap-2" id="bulkDeleteForm" onsubmit="return confirm('Delete the selected transactions? This cannot be undone.')">
+                <form method="POST" action="{{ route('transactions.bulk-destroy') }}" class="inline-flex items-center gap-2" id="bulkDeleteForm" data-confirm="Delete the selected transactions? This cannot be undone.">
                     @csrf @method('DELETE')
                     <div id="bulkDeleteIdsContainer" style="display:contents;"></div>
                     <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
@@ -132,7 +132,7 @@
                         @endif
                         <div class="flex items-center gap-4 pt-2 mt-2 border-t border-gray-50">
                             <a href="{{ route('transactions.edit', $t) }}" class="text-xs text-indigo-600 font-medium">✏️ Edit</a>
-                            <form method="POST" action="{{ route('transactions.destroy', $t) }}" class="inline" onsubmit="return confirm('Delete this transaction?')">
+                            <form method="POST" action="{{ route('transactions.destroy', $t) }}" class="inline" data-confirm="Delete this transaction?">
                                 @csrf @method('DELETE')
                                 <button class="text-xs text-red-600 font-medium">🗑️ Delete</button>
                             </form>

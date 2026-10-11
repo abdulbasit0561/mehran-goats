@@ -28,6 +28,45 @@ Alpine.store('ui', {
     closeMore() { this.moreOpen = false; },
 });
 
+Alpine.store('confirm', {
+    open: false,
+    message: '',
+    form: null,
+    ask(message, form) {
+        this.message = message;
+        this.form = form;
+        this.open = true;
+    },
+    accept() {
+        const form = this.form;
+        this.open = false;
+        this.form = null;
+        this.message = '';
+        if (!form) return;
+        form.dataset.confirmed = '1';
+        form.requestSubmit();
+    },
+    cancel() {
+        this.open = false;
+        this.form = null;
+        this.message = '';
+    },
+});
+
+document.addEventListener('submit', (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (form.dataset.confirmed === '1') {
+        delete form.dataset.confirmed;
+        return;
+    }
+    const message = event.submitter?.getAttribute('data-confirm') || form.getAttribute('data-confirm');
+    if (!message) return;
+    event.preventDefault();
+    event.stopPropagation();
+    Alpine.store('confirm').ask(message, form);
+}, true);
+
 // Initialize offline-first system (registers Alpine.store('offline'))
 initOffline(Alpine);
 

@@ -75,7 +75,7 @@ class InvestorController extends Controller
             ->addColumn('actions', function (Investor $investor) {
                 return '<button type="button" onclick="window.dispatchEvent(new CustomEvent(\'open-investment-modal\', { detail: { investorId: ' . $investor->id . ' } }))" class="text-emerald-600 hover:underline text-xs">Investment</button> '
                     . '<a href="' . route('investors.edit', $investor) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
-                    . '<form method="POST" action="' . route('investors.destroy', $investor) . '" class="inline" onsubmit="return confirm(\'Delete this investor?\')">'
+                    . '<form method="POST" action="' . route('investors.destroy', $investor) . '" class="inline" data-confirm="Delete this investor?">'
                     . csrf_field() . method_field('DELETE')
                     . '<button class="text-red-600 hover:underline text-xs">Delete</button></form>';
             })

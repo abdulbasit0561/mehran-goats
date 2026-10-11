@@ -6,7 +6,7 @@
                 <a href="{{ route('exchanges.edit', $exchange) }}" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 transition">
                     ✏️ Edit
                 </a>
-                <form method="POST" action="{{ route('exchanges.destroy', $exchange) }}" onsubmit="return confirm('Delete this exchange? This will:\n\n• Restore the outgoing goat back to the herd\n• Delete the incoming goat\n• Delete all related transactions\n• Delete the investor investment record\n\nThis cannot be undone.');">
+                <form method="POST" action="{{ route('exchanges.destroy', $exchange) }}" data-confirm="Delete this exchange? This will:&#10;&#10;• Restore the outgoing goat back to the herd&#10;• Delete the incoming goat&#10;• Delete all related transactions&#10;• Delete the investor investment record&#10;&#10;This cannot be undone.">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition">

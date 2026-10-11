@@ -53,7 +53,7 @@ class CustomerController extends Controller
             ->addColumn('created_at', fn (Customer $customer) => $customer->created_at?->format('M d, Y'))
             ->addColumn('actions', function (Customer $customer) {
                 return '<a href="' . route('customers.edit', $customer) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
-                    . '<form method="POST" action="' . route('customers.destroy', $customer) . '" class="inline" onsubmit="return confirm(\'Delete this buyer?\')">'
+                    . '<form method="POST" action="' . route('customers.destroy', $customer) . '" class="inline" data-confirm="Delete this buyer?">'
                     . csrf_field() . method_field('DELETE')
                     . '<button class="text-red-600 hover:underline text-xs">Delete</button></form>';
             })

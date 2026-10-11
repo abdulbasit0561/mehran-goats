@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">River M, Mehran Goats symbol</title>
+  <!-- Centerline M: two round banks and a river bend in the valley. -->
+  <path fill="none" stroke="#141414" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"
+        d="M46 200 V112 A30 30 0 0 1 106 112 V154 A22 22 0 0 0 150 154 V112 A30 30 0 0 1 210 112 V200"/>
+</svg>

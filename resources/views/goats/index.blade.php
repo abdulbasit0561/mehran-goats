@@ -107,7 +107,7 @@
                                     <a href="{{ route('goats.breeding-records.create', $goat) }}" class="text-xs font-medium" style="color: #ec4899;">🤰 Mark Bred</a>
                                 @endif
                             @endif
-                            <form method="POST" action="{{ route('goats.destroy', $goat) }}" class="inline" onsubmit="return confirm('Delete this goat?')">
+                            <form method="POST" action="{{ route('goats.destroy', $goat) }}" class="inline" data-confirm="Delete this goat?">
                                 @csrf @method('DELETE')
                                 <button class="text-xs text-red-600 font-medium">🗑️ Delete</button>
                             </form>

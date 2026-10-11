@@ -44,7 +44,7 @@
                     </div>
                     <div class="flex gap-2">
                         <a href="{{ route('caretakers.edit', $caretaker) }}" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md text-sm font-medium hover:bg-indigo-100">Edit</a>
-                        <form method="POST" action="{{ route('caretakers.destroy', $caretaker) }}" onsubmit="return confirm('Delete this caretaker? Assigned goats will be unassigned.')">
+                        <form method="POST" action="{{ route('caretakers.destroy', $caretaker) }}" data-confirm="Delete this caretaker? Assigned goats will be unassigned.">
                             @csrf @method('DELETE')
                             <button class="px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm font-medium hover:bg-red-100">Delete</button>
                         </form>

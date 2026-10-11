@@ -1,4 +1,4 @@
-@props(['size' => 'h-10', 'showText' => true, 'textClass' => 'text-lg'])
+@props(['size' => 'h-10', 'showText' => true, 'textClass' => 'text-lg', 'variant' => 'dark'])
 
 <div class="flex items-center gap-2.5">
     {{-- SVG Goat Emblem --}}
@@ -53,8 +53,8 @@
 
     @if($showText)
         <div class="flex flex-col leading-none">
-            <span class="{{ $textClass }} font-extrabold text-gray-800 tracking-tight">Mehran Goats</span>
-            <span class="text-[10px] font-medium text-gray-400 tracking-wider uppercase">Farm Management</span>
+            <span class="{{ $textClass }} font-extrabold tracking-tight {{ $variant === 'light' ? 'text-white' : 'text-gray-800' }}">Mehran Goats</span>
+            <span class="text-[10px] font-medium tracking-wider uppercase {{ $variant === 'light' ? 'text-white/55' : 'text-gray-400' }}">Farm Management</span>
         </div>
     @endif
 </div>

@@ -72,7 +72,7 @@
                 </dl>
                 <div class="mt-6 flex justify-end gap-3">
                     <a href="{{ route('transactions.edit', $transaction) }}" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">Edit</a>
-                    <form method="POST" action="{{ route('transactions.destroy', $transaction) }}" onsubmit="return confirm('Delete this transaction?')">
+                    <form method="POST" action="{{ route('transactions.destroy', $transaction) }}" data-confirm="Delete this transaction?">
                         @csrf @method('DELETE')
                         <button class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Delete</button>
                     </form>

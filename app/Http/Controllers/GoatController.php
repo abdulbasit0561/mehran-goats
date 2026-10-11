@@ -145,7 +145,7 @@ class GoatController extends Controller
             ->addColumn('days_held', fn (Goat $goat) => $goat->days_held ?? '—')
             ->addColumn('actions', function (Goat $goat) {
                 return '<a href="' . route('goats.edit', $goat) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
-                    . '<form method="POST" action="' . route('goats.destroy', $goat) . '" class="inline" onsubmit="return confirm(\'Delete this goat?\')">'
+                    . '<form method="POST" action="' . route('goats.destroy', $goat) . '" class="inline" data-confirm="Delete this goat?">'
                     . csrf_field() . method_field('DELETE')
                     . '<button type="submit" class="text-red-600 hover:underline text-xs">Delete</button></form>';
             })

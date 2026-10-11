@@ -94,7 +94,7 @@ class ExchangeController extends Controller
             ->addColumn('actions', function (Exchange $e) {
                 return '<a href="' . route('exchanges.show', $e) . '" class="text-indigo-600 hover:underline text-xs">View</a>'
                     . ' <a href="' . route('exchanges.edit', $e) . '" class="text-indigo-600 hover:underline text-xs ml-2">Edit</a>'
-                    . ' <form method="POST" action="' . route('exchanges.destroy', $e) . '" class="inline" onsubmit="return confirm(\'Delete this exchange? All related records will be removed and the outgoing goat restored to the herd.\');">'
+                    . ' <form method="POST" action="' . route('exchanges.destroy', $e) . '" class="inline" data-confirm="Delete this exchange? All related records will be removed and the outgoing goat restored to the herd.">'
                     . csrf_field() . method_field('DELETE')
                     . '<button type="submit" class="text-red-600 hover:underline text-xs ml-2">Delete</button>'
                     . '</form>';

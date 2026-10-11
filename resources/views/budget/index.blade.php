@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">📋 Budget Planner — {{ $year }}</h2>
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                <form method="POST" action="{{ route('budget.seed') }}" class="inline" onsubmit="return confirm('Seed default budget rows for {{ $year }}?')">
+                <form method="POST" action="{{ route('budget.seed') }}" class="inline" data-confirm="Seed default budget rows for {{ $year }}?">
                     @csrf
                     <input type="hidden" name="year" value="{{ $year }}" />
                     <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600">🌱 Seed Year</button>
@@ -84,7 +84,7 @@
                                         <form id="edit-{{ $entry->id }}" method="POST" action="{{ route('budget.update', $entry) }}" class="hidden">
                                             @csrf @method('PATCH')
                                         </form>
-                                        <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" onsubmit="return confirm('Delete {{ $entry->category }}?')">
+                                        <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" data-confirm="Delete {{ $entry->category }}?">
                                             @csrf @method('DELETE')
                                             <button class="text-red-600 hover:underline text-xs">Delete</button>
                                         </form>
@@ -151,7 +151,7 @@
                                     @endforeach
                                     <td class="px-3 py-2 text-right font-bold text-red-700">{{ number_format($entry->annual_total, 0) }}</td>
                                     <td class="px-3 py-2 text-center space-x-2">
-                                        <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" onsubmit="return confirm('Delete {{ $entry->category }}?')">
+                                        <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" data-confirm="Delete {{ $entry->category }}?">
                                             @csrf @method('DELETE')
                                             <button class="text-red-600 hover:underline text-xs">Delete</button>
                                         </form>
@@ -197,7 +197,7 @@
                                 <form id="m-edit-{{ $entry->id }}" method="POST" action="{{ route('budget.update', $entry) }}" class="hidden">
                                     @csrf @method('PATCH')
                                 </form>
-                                <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" onsubmit="return confirm('Delete {{ $entry->category }}?')">
+                                <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" data-confirm="Delete {{ $entry->category }}?">
                                     @csrf @method('DELETE')
                                     <button class="text-red-600 text-xs">Delete</button>
                                 </form>
@@ -245,7 +245,7 @@
                             <span class="font-semibold text-gray-900 text-sm">{{ $entry->category }}</span>
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-red-700 text-sm">{{ number_format($entry->annual_total, 0) }}</span>
-                                <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" onsubmit="return confirm('Delete {{ $entry->category }}?')">
+                                <form method="POST" action="{{ route('budget.destroy', $entry) }}" class="inline" data-confirm="Delete {{ $entry->category }}?">
                                     @csrf @method('DELETE')
                                     <button class="text-red-600 text-xs">Delete</button>
                                 </form>

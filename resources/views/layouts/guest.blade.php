@@ -14,7 +14,7 @@
 
         <!-- PWA -->
         <link rel="manifest" href="{{ asset('manifest.json') }}" />
-        <meta name="theme-color" content="#059669" />
+        <meta name="theme-color" content="#1b3a2b" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -23,27 +23,23 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
+    <body class="font-sans antialiased text-stone-800">
         <x-pwa-install-banner />
 
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div class="mb-2">
-                <a href="/" class="flex flex-col items-center gap-3">
-                    <x-logo size="h-14" :showText="false" />
-                    <div class="text-center">
-                        <span class="text-2xl font-extrabold text-gray-800 tracking-tight">Mehran Goats</span>
-                        <p class="text-xs font-medium text-gray-400 tracking-wider uppercase">Farm Management</p>
-                    </div>
+        <div class="auth-shell">
+            <div class="auth-card">
+                <a href="/" class="auth-brand">
+                    <x-logo size="h-12" textClass="text-xl" />
                 </a>
-            </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
+                <div class="auth-panel">
+                    {{ $slot }}
+                </div>
             </div>
         </div>
     </body>

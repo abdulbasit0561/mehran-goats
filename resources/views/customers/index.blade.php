@@ -64,7 +64,7 @@
                         </a>
                         <div class="flex items-center gap-4 pt-2 mt-2 border-t border-gray-50">
                             <a href="{{ route('customers.edit', $customer) }}" class="text-xs text-indigo-600 font-medium">✏️ Edit</a>
-                            <form method="POST" action="{{ route('customers.destroy', $customer) }}" class="inline" onsubmit="return confirm('Delete this buyer?')">
+                            <form method="POST" action="{{ route('customers.destroy', $customer) }}" class="inline" data-confirm="Delete this buyer?">
                                 @csrf @method('DELETE')
                                 <button class="text-xs text-red-600 font-medium">🗑️ Delete</button>
                             </form>

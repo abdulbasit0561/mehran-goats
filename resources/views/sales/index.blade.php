@@ -72,7 +72,7 @@
                         </a>
                         <div class="flex items-center gap-4 pt-2 mt-2 border-t border-gray-50">
                             <a href="{{ route('sales.edit', $sale) }}" class="text-xs text-indigo-600 font-medium">✏️ Edit</a>
-                            <form method="POST" action="{{ route('sales.destroy', $sale) }}" class="inline" onsubmit="return confirm('Delete this sale? The goat returns to the herd and the income entry is removed.')">
+                            <form method="POST" action="{{ route('sales.destroy', $sale) }}" class="inline" data-confirm="Delete this sale? The goat returns to the herd and the income entry is removed.">
                                 @csrf @method('DELETE')
                                 <button class="text-xs text-red-600 font-medium">🗑️ Delete</button>
                             </form>

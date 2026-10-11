@@ -79,7 +79,7 @@ class SaleController extends Controller
             ->addColumn('actions', function (Sale $sale) {
                 return '<a href="' . route('sales.show', $sale) . '" class="text-gray-700 hover:underline text-xs">View</a> '
                     . '<a href="' . route('sales.edit', $sale) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
-                    . '<form method="POST" action="' . route('sales.destroy', $sale) . '" class="inline" onsubmit="return confirm(\'Delete this sale? The goat returns to the herd and the income entry is removed.\')">'
+                    . '<form method="POST" action="' . route('sales.destroy', $sale) . '" class="inline" data-confirm="Delete this sale? The goat returns to the herd and the income entry is removed.">'
                     . csrf_field() . method_field('DELETE')
                     . '<button class="text-red-600 hover:underline text-xs">Delete</button></form>';
             })

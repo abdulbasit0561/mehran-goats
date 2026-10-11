@@ -604,7 +604,7 @@
                                         <button type="submit" class="text-xs text-amber-600 hover:text-amber-800 font-medium">{{ $service->is_active ? 'Hide' : 'Show' }}</button>
                                     </form>
                                     <a href="{{ route('cms.services.edit', $service) }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Edit</a>
-                                    <form method="POST" action="{{ route('cms.services.destroy', $service) }}" class="inline" onsubmit="return confirm('Delete this service card?')">
+                                    <form method="POST" action="{{ route('cms.services.destroy', $service) }}" class="inline" data-confirm="Delete this service card?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-medium">Delete</button>

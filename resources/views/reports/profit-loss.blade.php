@@ -196,7 +196,7 @@
                     <h3 class="font-semibold text-gray-900 mb-2 text-sm sm:text-base">💼 Distribute Profit</h3>
                     <p class="text-xs sm:text-sm text-gray-500 mb-3">Create distribution records for all investors based on their share % for the period <strong>{{ $start->format('M d') }} – {{ $end->format('M d, Y') }}</strong>.</p>
                     @if ($netProfit > 0)
-                        <form method="POST" action="{{ route('reports.distribute') }}" onsubmit="return confirm('Create profit distribution records for all investors for this period?')">
+                        <form method="POST" action="{{ route('reports.distribute') }}" data-confirm="Create profit distribution records for all investors for this period?">
                             @csrf
                             <input type="hidden" name="start" value="{{ $start->format('Y-m-d') }}" />
                             <input type="hidden" name="end" value="{{ $end->format('Y-m-d') }}" />

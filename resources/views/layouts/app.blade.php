@@ -23,7 +23,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -125,9 +125,11 @@
             }
         @endphp
 
-        <div class="min-h-screen bg-gray-50">
-            {{-- Desktop navigation (hidden on mobile via its own sm: classes) --}}
+        <div class="admin-shell min-h-screen">
+            {{-- Desktop sidebar --}}
             @include('layouts.navigation')
+
+            <div class="admin-canvas">
 
             {{-- ================================================================ --}}
             {{-- MOBILE APP BAR (dark-green branded header)                        --}}
@@ -157,10 +159,25 @@
                 </div>
             </header>
 
+            {{-- Desktop top bar --}}
+            <header class="admin-topbar">
+                <form class="admin-search" method="GET" action="{{ route('goats.index') }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.3-4.3M11 18a7 7 0 100-14 7 7 0 000 14z"/></svg>
+                    <input type="search" name="q" placeholder="Search the herd" aria-label="Search the herd">
+                </form>
+                <a href="{{ route('profile.edit') }}" class="admin-topbar-user">
+                    <span class="mg-avatar">{{ strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}</span>
+                    <span class="min-w-0">
+                        <span class="hidden md:block truncate">{{ Auth::user()->name }}</span>
+                        <span class="admin-topbar-role hidden md:block">Admin</span>
+                    </span>
+                </a>
+            </header>
+
             {{-- Page header (desktop only — hidden on mobile via mobile-page-header class) --}}
             @isset($header)
-                <header class="mobile-page-header bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <header class="mobile-page-header admin-page-header">
+                    <div class="admin-page-header-inner max-w-7xl mx-auto">
                         {{ $header }}
                     </div>
                 </header>
@@ -170,6 +187,7 @@
             <main class="page-content">
                 {{ $slot }}
             </main>
+            </div>
         </div>
 
         {{-- ================================================================ --}}
@@ -296,6 +314,24 @@
                             </span>
                             <span class="more-label">Breeds</span>
                         </a>
+                        <a href="{{ route('sales.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
+                            <span class="more-icon">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l2 2 4-4M7 4h10a2 2 0 012 2v14l-4-2-3 2-3-2-4 2V6a2 2 0 012-2z"/></svg>
+                            </span>
+                            <span class="more-label">Sales</span>
+                        </a>
+                        <a href="{{ route('customers.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
+                            <span class="more-icon">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            </span>
+                            <span class="more-label">Buyers</span>
+                        </a>
+                        <a href="{{ route('cms.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
+                            <span class="more-icon">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                            </span>
+                            <span class="more-label">Website</span>
+                        </a>
                         <a href="{{ route('budget.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
                             <span class="more-icon">
                                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -347,6 +383,28 @@
             </div>
         </div>
         </div>{{-- /mobile-only --}}
+
+        <div
+            x-data
+            x-cloak
+            x-show="$store.confirm.open"
+            x-transition.opacity
+            class="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-4"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="ui-confirm-title"
+            @keydown.escape.window="$store.confirm.cancel()"
+        >
+            <div class="absolute inset-0 bg-slate-900/40" @click="$store.confirm.cancel()"></div>
+            <div class="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
+                <h2 id="ui-confirm-title" class="text-base font-semibold text-slate-900">Please confirm</h2>
+                <p class="mt-2 text-sm leading-relaxed text-slate-600 whitespace-pre-line" x-text="$store.confirm.message"></p>
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" @click="$store.confirm.cancel()">Cancel</button>
+                    <button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500" @click="$store.confirm.accept()">Confirm</button>
+                </div>
+            </div>
+        </div>
 
         @stack('scripts')
     </body>

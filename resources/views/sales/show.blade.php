@@ -104,7 +104,7 @@
                                             <td class="py-2">{{ $payment->reference ?? '—' }}</td>
                                             <td class="py-2 text-gray-500">{{ $payment->notes ?? '—' }}</td>
                                             <td class="py-2 text-right">
-                                                <form method="POST" action="{{ route('sales.payments.destroy', [$sale, $payment]) }}" onsubmit="return confirm('Delete this payment?')">
+                                                <form method="POST" action="{{ route('sales.payments.destroy', [$sale, $payment]) }}" data-confirm="Delete this payment?">
                                                     @csrf @method('DELETE')
                                                     <button class="text-xs text-red-600 hover:underline">Delete</button>
                                                 </form>

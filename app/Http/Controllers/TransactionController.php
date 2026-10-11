@@ -127,7 +127,7 @@ class TransactionController extends Controller
             })
             ->addColumn('actions', function (Transaction $t) {
                 return '<a href="' . route('transactions.edit', $t) . '" class="text-indigo-600 hover:underline text-xs">Edit</a> '
-                    . '<form method="POST" action="' . route('transactions.destroy', $t) . '" class="inline" onsubmit="return confirm(\'Delete this transaction?\')">'
+                    . '<form method="POST" action="' . route('transactions.destroy', $t) . '" class="inline" data-confirm="Delete this transaction?">'
                     . csrf_field() . method_field('DELETE')
                     . '<button class="text-red-600 hover:underline text-xs">Delete</button></form>';
             })
