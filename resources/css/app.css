@@ -963,6 +963,38 @@ div.dt-container div.dt-paging ul.pagination li.disabled .page-link:hover {
 /*  DATATABLES NATIVE FILTER TOOLBAR                                 */
 /* ================================================================ */
 
+/* Selection controls share the table's grid cell so they cover the filter
+   toolbar instead of inserting a row that pushes the table down. */
+.txn-stack {
+    display: grid;
+}
+.txn-stack > .txn-stack-body,
+.txn-stack > .txn-bulk-bar {
+    grid-area: 1 / 1;
+}
+.txn-bulk-bar {
+    z-index: 20;
+    align-self: start;
+    min-height: 4rem;
+}
+.txn-stack.is-selecting .dt-container > .flex:first-child {
+    visibility: hidden;
+}
+@media (max-width: 639px) {
+    /* No filter toolbar to cover on phones, so keep the bar in normal flow. */
+    .txn-stack {
+        display: flex;
+        flex-direction: column;
+    }
+    .txn-bulk-bar {
+        order: -1;
+        align-self: stretch;
+        min-height: 0;
+        margin-bottom: 0.75rem;
+        border-radius: 0.75rem;
+    }
+}
+
 /* Filter bar slot in the DataTables DOM layout */
 .dt-filter-bar {
     display: flex;
@@ -1071,6 +1103,8 @@ body {
     .chart-card,
     .page-content,
     .side-link,
+    .side-chevron,
+    .side-group-panel,
     .auth-card,
     .goat-svg,
     .goat-leg,
@@ -1173,6 +1207,58 @@ body {
 
 .side-label:first-child {
     margin-top: 0.15rem;
+}
+
+.side-group-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0.85rem 0 0.2rem;
+    padding: 0.28rem 0.55rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a1aab8;
+}
+
+.side-group:first-child .side-group-btn {
+    margin-top: 0.1rem;
+}
+
+.side-group-btn:hover {
+    color: #637083;
+    background: #f4f7fb;
+}
+
+.side-chevron {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.side-group.is-collapsed .side-chevron {
+    transform: rotate(-90deg);
+}
+
+.side-group-panel {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.22s ease;
+}
+
+.side-group.is-collapsed .side-group-panel {
+    grid-template-rows: 0fr;
+}
+
+.side-group-panel-inner {
+    overflow: hidden;
 }
 
 .side-link {

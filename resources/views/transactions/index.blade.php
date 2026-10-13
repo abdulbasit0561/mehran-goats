@@ -36,47 +36,13 @@
                 @endforeach
             </div>
 
-            {{-- ============================================================= --}}
-            {{-- BULK ACTION BAR (hidden until items are selected)            --}}
-            {{-- ============================================================= --}}
-            <div id="bulkActionBar" class="hidden mb-4 rounded-xl bg-indigo-50 border border-indigo-200 p-3 sm:p-4 flex flex-wrap items-center gap-3">
-                <span class="text-sm font-semibold text-indigo-800">
-                    <span id="bulkCount">0</span> selected
-                </span>
-
-                {{-- Bulk Assign Investor --}}
-                <form method="POST" action="{{ route('transactions.bulk-assign') }}" class="inline-flex items-center gap-2" id="bulkAssignForm">
-                    @csrf @method('PATCH')
-                    <div id="bulkAssignIdsContainer" style="display:contents;"></div>
-                    <select name="investor_id" id="bulkInvestorSelect" class="rounded-md border-gray-300 text-sm py-1.5 pr-8" required>
-                        <option value="">Assign investor…</option>
-                        @foreach ($investors as $inv)
-                            <option value="{{ $inv->id }}">{{ $inv->name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
-                        Assign
-                    </button>
-                </form>
-
-                {{-- Bulk Delete --}}
-                <form method="POST" action="{{ route('transactions.bulk-destroy') }}" class="inline-flex items-center gap-2" id="bulkDeleteForm" data-confirm="Delete the selected transactions? This cannot be undone.">
-                    @csrf @method('DELETE')
-                    <div id="bulkDeleteIdsContainer" style="display:contents;"></div>
-                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
-                        🗑 Delete Selected
-                    </button>
-                </form>
-
-                <button type="button" id="bulkClearBtn" class="ml-auto text-sm text-gray-500 hover:text-gray-700 font-medium">
-                    Clear selection
-                </button>
-            </div>
-
+            {{-- Bulk actions overlay the table toolbar so selecting a row does not push the table down. --}}
+            <div id="txnStack" class="txn-stack">
+            <div class="txn-stack-body min-w-0">
             {{-- ============================================================= --}}
             {{-- DESKTOP TABLE (hidden on mobile)                              --}}
             {{-- ============================================================= --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 desktop-only-table">
+            <div class="txn-table-card bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 desktop-only-table">
                 <table id="transactions-table" class="w-full text-sm display">
                     <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
                         <tr>
@@ -149,6 +115,42 @@
                     {{ $transactions->withQueryString()->links() }}
                 </div>
             </div>
+            </div>
+
+            <div id="bulkActionBar" class="txn-bulk-bar hidden rounded-t-lg bg-indigo-50 border border-indigo-200 px-3 sm:px-4 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+                <span class="text-sm font-semibold text-indigo-800 whitespace-nowrap">
+                    <span id="bulkCount">0</span> selected
+                </span>
+
+                {{-- Bulk Assign Investor --}}
+                <form method="POST" action="{{ route('transactions.bulk-assign') }}" class="inline-flex items-center gap-2" id="bulkAssignForm">
+                    @csrf @method('PATCH')
+                    <div id="bulkAssignIdsContainer" style="display:contents;"></div>
+                    <select name="investor_id" id="bulkInvestorSelect" class="rounded-md border-gray-300 text-sm py-1.5 pr-8" required>
+                        <option value="">Assign investor…</option>
+                        @foreach ($investors as $inv)
+                            <option value="{{ $inv->id }}">{{ $inv->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 whitespace-nowrap">
+                        Assign
+                    </button>
+                </form>
+
+                {{-- Bulk Delete --}}
+                <form method="POST" action="{{ route('transactions.bulk-destroy') }}" class="inline-flex items-center gap-2" id="bulkDeleteForm" data-confirm="Delete the selected transactions? This cannot be undone.">
+                    @csrf @method('DELETE')
+                    <div id="bulkDeleteIdsContainer" style="display:contents;"></div>
+                    <button type="submit" class="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 whitespace-nowrap">
+                        🗑 Delete Selected
+                    </button>
+                </form>
+
+                <button type="button" id="bulkClearBtn" class="sm:ml-auto text-sm text-gray-500 hover:text-gray-700 font-medium whitespace-nowrap">
+                    Clear selection
+                </button>
+            </div>
+            </div>
         </div>
     </div>
 
@@ -156,10 +158,24 @@
         document.addEventListener('DOMContentLoaded', function () {
             // ---- Selection tracking (shared across desktop + mobile) ----
             const selectedIds = new Set();
+            const txnStack = document.getElementById('txnStack');
             const bulkActionBar = document.getElementById('bulkActionBar');
             const bulkCountEl = document.getElementById('bulkCount');
             const assignIdsContainer = document.getElementById('bulkAssignIdsContainer');
             const deleteIdsContainer = document.getElementById('bulkDeleteIdsContainer');
+
+            // Match the bar to the filter toolbar so it covers that row and leaves the table where it is.
+            function syncBulkBarHeight() {
+                const card = txnStack.querySelector('.txn-table-card');
+                const toolbar = txnStack.querySelector('#transactions-table_wrapper > .flex');
+                if (!card || !toolbar || card.offsetParent === null) {
+                    bulkActionBar.style.minHeight = '';
+                    return;
+                }
+                const padTop = parseFloat(getComputedStyle(card).paddingTop) || 0;
+                const marginBottom = parseFloat(getComputedStyle(toolbar).marginBottom) || 0;
+                bulkActionBar.style.minHeight = (padTop + toolbar.offsetHeight + marginBottom) + 'px';
+            }
 
             // Populate hidden inputs as ids[] so PHP receives a proper array
             function populateIdsInputs() {
@@ -179,12 +195,17 @@
                 const count = selectedIds.size;
                 bulkCountEl.textContent = count;
                 if (count > 0) {
+                    syncBulkBarHeight();
                     bulkActionBar.classList.remove('hidden');
+                    txnStack.classList.add('is-selecting');
                     populateIdsInputs();
                 } else {
                     bulkActionBar.classList.add('hidden');
+                    txnStack.classList.remove('is-selecting');
                 }
             }
+
+            window.addEventListener('resize', syncBulkBarHeight);
 
             // ---- Desktop: DataTables row checkboxes ----
             const tableEl = document.getElementById('transactions-table');

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AgentChatController;
 use App\Http\Controllers\BreedController;
 use App\Http\Controllers\BreedingController;
 use App\Http\Controllers\CmsController;
@@ -84,6 +85,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/goats/{goat}/ai-insights/latest', [AiInsightController::class, 'latest'])->name('goats.ai-insights.latest');
 
     // Farm-level AI insights (autonomous agent page)
+    Route::get('/agent', [AgentChatController::class, 'index'])->name('agent.index');
+    Route::post('/agent/messages', [AgentChatController::class, 'store'])->middleware('throttle:12,1')->name('agent.messages.store');
+    Route::post('/agent/reset', [AgentChatController::class, 'reset'])->name('agent.reset');
+
     Route::get('/ai-insights', [FarmAiInsightController::class, 'index'])->name('farm.ai-insights.index');
     Route::post('/ai-insights/run', [FarmAiInsightController::class, 'run'])->name('farm.ai-insights.run');
     Route::get('/ai-insights/latest', [FarmAiInsightController::class, 'latest'])->name('farm.ai-insights.latest');

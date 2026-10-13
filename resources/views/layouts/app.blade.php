@@ -52,6 +52,7 @@
                     'customers.index' => 'Buyers',
                     'customers.create' => 'Add Buyer',
                     'customers.show' => 'Buyer Details',
+                    'agent.index' => 'Farm agent',
                     'farm.ai-insights.index' => 'AI Insights',
                     'customers.edit' => 'Edit Buyer',
                     'sales.index' => 'Sales',
@@ -219,13 +220,13 @@
             </a>
 
             {{-- AI Insights --}}
-            <a href="{{ route('farm.ai-insights.index') }}" class="{{ request()->routeIs('farm.ai-insights.*') ? 'active' : '' }}">
-                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                <span>AI</span>
+            <a href="{{ route('agent.index') }}" class="{{ request()->routeIs('agent.*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                <span>Agent</span>
             </a>
 
             {{-- More (opens slide-up sheet via Alpine store) --}}
-            <a href="#" @click.prevent="$store.ui.openMore()" class="{{ request()->routeIs('transactions.*') || request()->routeIs('exchanges.*') || request()->routeIs('breeds.*') || request()->routeIs('caretakers.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('budget.*') || request()->routeIs('instructions') || request()->routeIs('profile.*') || request()->routeIs('activity-logs.*') ? 'active' : '' }}">
+            <a href="#" @click.prevent="$store.ui.openMore()" class="{{ request()->routeIs('transactions.*') || request()->routeIs('exchanges.*') || request()->routeIs('breeds.*') || request()->routeIs('caretakers.*') || request()->routeIs('breeding.*') || request()->routeIs('goats.breeding-records.*') || request()->routeIs('budget.*') || request()->routeIs('instructions') || request()->routeIs('profile.*') || request()->routeIs('activity-logs.*') || request()->routeIs('farm.ai-insights.*') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 <span>More</span>
                 {{-- Offline pending count badge --}}
@@ -343,6 +344,18 @@
                                 <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             </span>
                             <span class="more-label">Clearance</span>
+                        </a>
+                        <a href="{{ route('agent.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
+                            <span class="more-icon">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                            </span>
+                            <span class="more-label">Agent</span>
+                        </a>
+                        <a href="{{ route('farm.ai-insights.index') }}" class="more-grid-item" @click="$store.ui.closeMore()">
+                            <span class="more-icon">
+                                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </span>
+                            <span class="more-label">Herd report</span>
                         </a>
                         <a href="{{ route('instructions') }}" class="more-grid-item" @click="$store.ui.closeMore()">
                             <span class="more-icon">
